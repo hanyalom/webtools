@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Word Counter</title>
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<header><h1><a href="../../">Web Tools</a> / Word Counter</h1></header>
+<main>
+<textarea id="t" placeholder="Type or paste text..."></textarea>
+<p>Words: <b id="w">0</b> &middot; Characters: <b id="c">0</b></p>
+</main>
+<script>
+const t=document.getElementById('t');
+t.addEventListener('input',()=>{
+  const s=t.value.trim();
+  document.getElementById('w').textContent=s?s.split(/\s+/).length:0;
+  document.getElementById('c').textContent=t.value.length;
+});
+</script>
+</body>
+</html>
