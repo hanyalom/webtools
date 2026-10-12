@@ -288,158 +288,724 @@
       (when a delay is set). The beep 🔊 should appear in the waveform after the green marker.</div>
   </div>
   <script>
-    const $ = id => document.getElementById(id), clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-    let ctx, stream, node, src, mute, chunks = [], marks = [], recStart = 0, recording = false;
-    let raw, data, N = 0, sr = 48000, peak = 1, vs = 0, vn = 1, A = 0, B = 0, drag = null, lastX = 0, playing = null;
-    const box = $('box'), cv = $('cv'), g = cv.getContext('2d'), sb = $('sb'), th = $('th');
-    const getCtx = () => ctx || (ctx = new AudioContext({ latencyHint: 'interactive' }));
-    const num = (id, d) => { const v = parseFloat($(id).value); return v >= 0 ? v : d };
+    // Shortcuts for DOM lookups and keeping a value within a range.
+    const byId = id => document.getElementById(id);
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    /* ---------- test box ---------- */
-    let pressed = false, mt;
-    const setS = s => box.dataset.s = s;
-    const evT = e => ctx.currentTime - (performance.now() - e.timeStamp) / 1000 - recStart;
-    function beep() {
-      const c = getCtx(); if (c.state !== 'running') c.resume();
-      const o = c.createOscillator(), v = c.createGain(); o.type = 'square'; o.frequency.value = num('freq', 2500); v.gain.value = 1;
-      o.connect(v).connect(c.destination); const t = c.currentTime + num('dly', 0) / 1000; o.start(t); o.stop(t + num('dur', 80) / 1000); return t
-    }
-    box.addEventListener('pointerdown', e => {
-      pressed = true; box.setPointerCapture(e.pointerId); setS('green'); beep();
-      if (recording) { const t = evT(e), dl = num('dly', 0); marks.push({ t, c: '#22a04b', l: 'click' }); if (dl > 0) marks.push({ t: t + dl / 1000, c: '#a855f7', l: 'beep' }) }
-    });
-    const up = () => { pressed = false; clearTimeout(mt); setS('red') };
-    box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up); box.addEventListener('pointerleave', () => { if (!pressed) up() });
-    box.addEventListener('pointermove', e => {
-      if (pressed) return;
-      if (box.dataset.s !== 'blue' && recording) marks.push({ t: evT(e), c: '#3b82f6', l: 'move' });
-      setS('blue'); clearTimeout(mt); mt = setTimeout(() => { if (!pressed) setS('red') }, 120)
-    });
+    // Audio capture state.
+    let audioContext;
+    let microphoneStream;
+    let recorderNode;
+    let microphoneSource;
+    let silentOutput;
+    let audioChunks = [];
+    let eventMarkers = [];
+    let recordingStartTime = 0;
+    let isRecording = false;
 
-    /* ---------- recording ---------- */
-    const WK = `class R extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0;
-this.port.onmessage=()=>{this.port.postMessage(this.b.slice(0,this.n));this.n=0}}
-process(i){const c=i[0][0];if(!c)return true;for(let k=0;k<c.length;k++){this.b[this.n++]=c[k];
-if(this.n==2048){this.port.postMessage(this.b);this.b=new Float32Array(2048);this.n=0}}return true}}registerProcessor('r',R);`;
-    $('rec').onclick = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
-        const c = getCtx(); await c.resume();
-        src = c.createMediaStreamSource(stream); mute = c.createGain(); mute.gain.value = 0; mute.connect(c.destination);
-        chunks = []; marks = [];
-        try {
-          await c.audioWorklet.addModule(URL.createObjectURL(new Blob([WK], { type: 'text/javascript' })));
-          node = new AudioWorkletNode(c, 'r'); node.port.onmessage = e => chunks.push(e.data);
-        } catch (_) {
-          node = c.createScriptProcessor(1024, 1, 1); node.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-        }
-        src.connect(node); node.connect(mute);
-        recStart = c.currentTime; recording = true;
-        $('rec').disabled = true; $('stop').disabled = false; $('stat').textContent = 'Recording… move / click the box';
-      } catch (err) { $('stat').textContent = 'Mic error: ' + err.message }
+    // Recorded waveform and graph state. Marker positions are sample indexes.
+    let originalSamples;
+    let displayedSamples;
+    let sampleCount = 0;
+    let sampleRate = 48000;
+    let peakAmplitude = 1;
+    let visibleStart = 0;
+    let visibleLength = 1;
+    let mouseMarker = 0;
+    let beepMarker = 0;
+    let activeDrag = null;
+    let previousPointerX = 0;
+    let playbackSource = null;
+
+    // Frequently used page elements.
+    const testArea = byId('box');
+    const canvas = byId('cv');
+    const canvasContext = canvas.getContext('2d');
+    const scrollbar = byId('sb');
+    const scrollbarThumb = byId('th');
+
+    // Reuse one interactive AudioContext for recording, the beep, and playback.
+    const getAudioContext = () => audioContext || (
+      audioContext = new AudioContext({ latencyHint: 'interactive' })
+    );
+
+    // Parse a non-negative numeric input, falling back when it is blank or invalid.
+    const getNonNegativeInput = (id, fallback) => {
+      const value = parseFloat(byId(id).value);
+      return value >= 0 ? value : fallback;
     };
-    $('stop').onclick = () => {
-      recording = false; $('stop').disabled = true; $('stat').textContent = 'Processing…';
-      if (node.port) node.port.postMessage('f');
+
+    /* ---------- test area and beep ---------- */
+    let isPointerPressed = false;
+    let pointerIdleTimeout;
+
+    const setTestAreaState = state => {
+      testArea.dataset.s = state;
+    };
+
+    // Convert an event timestamp into seconds relative to the recording start.
+    const getRecordingTime = event =>
+      audioContext.currentTime -
+      (performance.now() - event.timeStamp) / 1000 -
+      recordingStartTime;
+
+    function playBeep() {
+      const context = getAudioContext();
+      if (context.state !== 'running') {
+        context.resume();
+      }
+
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'square';
+      oscillator.frequency.value = getNonNegativeInput('freq', 2500);
+      gain.gain.value = 1;
+      oscillator.connect(gain).connect(context.destination);
+
+      // Schedule the beep after the optional delay and stop it after its duration.
+      const beepStartTime =
+        context.currentTime + getNonNegativeInput('dly', 0) / 1000;
+      oscillator.start(beepStartTime);
+      oscillator.stop(
+        beepStartTime + getNonNegativeInput('dur', 80) / 1000
+      );
+      return beepStartTime;
+    }
+
+    testArea.addEventListener('pointerdown', event => {
+      isPointerPressed = true;
+      testArea.setPointerCapture(event.pointerId);
+      setTestAreaState('green');
+      playBeep();
+
+      if (isRecording) {
+        const clickTime = getRecordingTime(event);
+        const delayMs = getNonNegativeInput('dly', 0);
+
+        eventMarkers.push({
+          time: clickTime,
+          color: '#22a04b',
+          label: 'click'
+        });
+
+        if (delayMs > 0) {
+          eventMarkers.push({
+            time: clickTime + delayMs / 1000,
+            color: '#a855f7',
+            label: 'beep'
+          });
+        }
+      }
+    });
+
+    const releasePointer = () => {
+      isPointerPressed = false;
+      clearTimeout(pointerIdleTimeout);
+      setTestAreaState('red');
+    };
+
+    testArea.addEventListener('pointerup', releasePointer);
+    testArea.addEventListener('pointercancel', releasePointer);
+    testArea.addEventListener('pointerleave', () => {
+      if (!isPointerPressed) {
+        releasePointer();
+      }
+    });
+
+    testArea.addEventListener('pointermove', event => {
+      if (isPointerPressed) {
+        return;
+      }
+
+      // Mark the first movement in each movement streak, not every pointer event.
+      if (testArea.dataset.s !== 'blue' && isRecording) {
+        eventMarkers.push({
+          time: getRecordingTime(event),
+          color: '#3b82f6',
+          label: 'move'
+        });
+      }
+
+      setTestAreaState('blue');
+      clearTimeout(pointerIdleTimeout);
+      pointerIdleTimeout = setTimeout(() => {
+        if (!isPointerPressed) {
+          setTestAreaState('red');
+        }
+      }, 120);
+    });
+
+    /* ---------- microphone recording ---------- */
+    // The worklet forwards audio in chunks and flushes its final partial chunk on request.
+    const recorderWorkletCode = `
+      class RecorderProcessor extends AudioWorkletProcessor {
+        constructor() {
+          super();
+          this.buffer = new Float32Array(2048);
+          this.bufferLength = 0;
+
+          this.port.onmessage = () => {
+            this.port.postMessage(this.buffer.slice(0, this.bufferLength));
+            this.bufferLength = 0;
+          };
+        }
+
+        process(inputs) {
+          const channel = inputs[0][0];
+          if (!channel) {
+            return true;
+          }
+
+          for (let index = 0; index < channel.length; index++) {
+            this.buffer[this.bufferLength++] = channel[index];
+
+            if (this.bufferLength === this.buffer.length) {
+              this.port.postMessage(this.buffer);
+              this.buffer = new Float32Array(2048);
+              this.bufferLength = 0;
+            }
+          }
+
+          return true;
+        }
+      }
+
+      registerProcessor('r', RecorderProcessor);
+    `;
+
+    byId('rec').onclick = async () => {
+      try {
+        microphoneStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            channelCount: 1
+          }
+        });
+
+        const context = getAudioContext();
+        await context.resume();
+
+        microphoneSource = context.createMediaStreamSource(microphoneStream);
+        silentOutput = context.createGain();
+        silentOutput.gain.value = 0;
+        silentOutput.connect(context.destination);
+
+        audioChunks = [];
+        eventMarkers = [];
+
+        try {
+          const workletUrl = URL.createObjectURL(
+            new Blob([recorderWorkletCode], { type: 'text/javascript' })
+          );
+          await context.audioWorklet.addModule(workletUrl);
+
+          recorderNode = new AudioWorkletNode(context, 'r');
+          recorderNode.port.onmessage = event => {
+            audioChunks.push(event.data);
+          };
+        } catch (_) {
+          // Use ScriptProcessorNode on browsers without AudioWorklet support.
+          recorderNode = context.createScriptProcessor(1024, 1, 1);
+          recorderNode.onaudioprocess = event => {
+            audioChunks.push(
+              new Float32Array(event.inputBuffer.getChannelData(0))
+            );
+          };
+        }
+
+        microphoneSource.connect(recorderNode);
+        recorderNode.connect(silentOutput);
+
+        recordingStartTime = context.currentTime;
+        isRecording = true;
+        byId('rec').disabled = true;
+        byId('stop').disabled = false;
+        byId('stat').textContent = 'Recording… move / click the box';
+      } catch (error) {
+        byId('stat').textContent = 'Mic error: ' + error.message;
+      }
+    };
+
+    byId('stop').onclick = () => {
+      isRecording = false;
+      byId('stop').disabled = true;
+      byId('stat').textContent = 'Processing…';
+
+      // Ask the worklet to send any audio remaining in its partial buffer.
+      if (recorderNode.port) {
+        recorderNode.port.postMessage('flush');
+      }
+
       setTimeout(() => {
-        src.disconnect(); node.disconnect(); stream.getTracks().forEach(t => t.stop());
-        N = chunks.reduce((a, c) => a + c.length, 0); raw = data = new Float32Array(N);
-        let o = 0; for (const c of chunks) { data.set(c, o); o += c.length }
-        chunks = []; sr = ctx.sampleRate; peak = 1e-6; for (let i = 0; i < N; i++) { const v = Math.abs(data[i]); if (v > peak) peak = v }
-        vs = 0; vn = Math.max(N, 1); A = N * .25; B = N * .75; applyThr();
-        $('res').style.display = 'block'; $('rec').disabled = false; $('stat').textContent = (N / sr).toFixed(2) + ' s recorded';
-        draw();
+        microphoneSource.disconnect();
+        recorderNode.disconnect();
+        microphoneStream.getTracks().forEach(track => track.stop());
+
+        // Join captured chunks into one sample array for drawing and playback.
+        sampleCount = audioChunks.reduce(
+          (total, chunk) => total + chunk.length,
+          0
+        );
+        originalSamples = displayedSamples = new Float32Array(sampleCount);
+
+        let offset = 0;
+        for (const chunk of audioChunks) {
+          displayedSamples.set(chunk, offset);
+          offset += chunk.length;
+        }
+
+        audioChunks = [];
+        sampleRate = audioContext.sampleRate;
+
+        // Peak amplitude is used to scale the waveform and the noise threshold.
+        peakAmplitude = 1e-6;
+        for (let index = 0; index < sampleCount; index++) {
+          const amplitude = Math.abs(displayedSamples[index]);
+          if (amplitude > peakAmplitude) {
+            peakAmplitude = amplitude;
+          }
+        }
+
+        visibleStart = 0;
+        visibleLength = Math.max(sampleCount, 1);
+        mouseMarker = sampleCount * 0.25;
+        beepMarker = sampleCount * 0.75;
+        applyThreshold();
+
+        byId('res').style.display = 'block';
+        byId('rec').disabled = false;
+        byId('stat').textContent =
+          (sampleCount / sampleRate).toFixed(2) + ' s recorded';
+        drawGraph();
       }, 80);
     };
 
-    /* ---------- graph ---------- */
-    function draw() {
-      if (!data) return;
-      const d = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
-      if (cv.width !== Math.round(W * d) || cv.height !== Math.round(H * d)) { cv.width = Math.round(W * d); cv.height = Math.round(H * d) }
-      g.setTransform(d, 0, 0, d, 0, 0);
-      const cs = getComputedStyle(document.documentElement), wave = cs.getPropertyValue('--wave'), grid = cs.getPropertyValue('--grid'), fg = cs.getPropertyValue('--fg');
-      g.clearRect(0, 0, W, H);
-      const spp = vn / W, k = (H / 2 - 1) / peak, Y = s => H / 2 - s * k;
-      // time axis
-      const msPx = spp / sr * 1000, raw = msPx * 90, p = 10 ** Math.floor(Math.log10(raw)), step = [1, 2, 5, 10].find(m => m * p >= raw) * p;
-      const dec = step < 1 ? Math.ceil(-Math.log10(step)) : 0, t0 = vs / sr * 1000, t1 = (vs + vn) / sr * 1000;
-      g.font = '11px system-ui'; g.textBaseline = 'bottom'; g.lineWidth = 1;
-      for (let n = Math.ceil(t0 / step); n * step <= t1; n++) {
-        const t = n * step, x = Math.round((t * sr / 1000 - vs) / spp) + .5;
-        g.strokeStyle = grid; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
-        g.fillStyle = fg; g.globalAlpha = .6; g.fillText(t.toFixed(dec) + ' ms', x + 3, H - 2); g.globalAlpha = 1
+    /* ---------- waveform drawing and graph controls ---------- */
+    function drawGraph() {
+      if (!displayedSamples) {
+        return;
       }
-      g.strokeStyle = grid; g.beginPath(); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke();
-      // waveform (normalised to fill full height)
-      g.strokeStyle = wave; g.fillStyle = wave;
-      if (spp > 2) {
-        for (let x = 0; x < W; x++) {
-          const i0 = Math.max(0, Math.floor(vs + x * spp)), i1 = Math.min(N, Math.floor(vs + (x + 1) * spp));
-          if (i1 <= i0) continue; let mn = 1e9, mx = -1e9;
-          for (let i = i0; i < i1; i++) { const v = data[i]; if (v < mn) mn = v; if (v > mx) mx = v }
-          g.fillRect(x, Y(mx), 1, Math.max(1, Y(mn) - Y(mx)))
+
+      const pixelRatio = devicePixelRatio || 1;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+
+      // Scale the backing canvas for crisp rendering on high-density displays.
+      if (
+        canvas.width !== Math.round(width * pixelRatio) ||
+        canvas.height !== Math.round(height * pixelRatio)
+      ) {
+        canvas.width = Math.round(width * pixelRatio);
+        canvas.height = Math.round(height * pixelRatio);
+      }
+      canvasContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      const styles = getComputedStyle(document.documentElement);
+      const waveColor = styles.getPropertyValue('--wave');
+      const gridColor = styles.getPropertyValue('--grid');
+      const textColor = styles.getPropertyValue('--fg');
+      canvasContext.clearRect(0, 0, width, height);
+
+      // Convert sample amplitudes to vertical positions in the graph.
+      const samplesPerPixel = visibleLength / width;
+      const amplitudeScale = (height / 2 - 1) / peakAmplitude;
+      const sampleToY = sample => height / 2 - sample * amplitudeScale;
+
+      // Choose readable time-axis tick spacing for the current zoom level.
+      const millisecondsPerPixel =
+        samplesPerPixel / sampleRate * 1000;
+      const targetTickSpacing = millisecondsPerPixel * 90;
+      const powerOfTen = 10 ** Math.floor(Math.log10(targetTickSpacing));
+      const tickStep =
+        [1, 2, 5, 10].find(multiplier =>
+          multiplier * powerOfTen >= targetTickSpacing
+        ) * powerOfTen;
+      const decimalPlaces =
+        tickStep < 1 ? Math.ceil(-Math.log10(tickStep)) : 0;
+      const visibleStartMs = visibleStart / sampleRate * 1000;
+      const visibleEndMs =
+        (visibleStart + visibleLength) / sampleRate * 1000;
+
+      canvasContext.font = '11px system-ui';
+      canvasContext.textBaseline = 'bottom';
+      canvasContext.lineWidth = 1;
+
+      for (
+        let tick = Math.ceil(visibleStartMs / tickStep);
+        tick * tickStep <= visibleEndMs;
+        tick++
+      ) {
+        const timeMs = tick * tickStep;
+        const x = Math.round(
+          (timeMs * sampleRate / 1000 - visibleStart) / samplesPerPixel
+        ) + 0.5;
+
+        canvasContext.strokeStyle = gridColor;
+        canvasContext.beginPath();
+        canvasContext.moveTo(x, 0);
+        canvasContext.lineTo(x, height);
+        canvasContext.stroke();
+
+        canvasContext.fillStyle = textColor;
+        canvasContext.globalAlpha = 0.6;
+        canvasContext.fillText(
+          timeMs.toFixed(decimalPlaces) + ' ms',
+          x + 3,
+          height - 2
+        );
+        canvasContext.globalAlpha = 1;
+      }
+
+      canvasContext.strokeStyle = gridColor;
+      canvasContext.beginPath();
+      canvasContext.moveTo(0, height / 2);
+      canvasContext.lineTo(width, height / 2);
+      canvasContext.stroke();
+
+      // At wide zoom levels, draw each pixel's min/max to preserve audio peaks.
+      canvasContext.strokeStyle = waveColor;
+      canvasContext.fillStyle = waveColor;
+      if (samplesPerPixel > 2) {
+        for (let x = 0; x < width; x++) {
+          const firstSample = Math.max(
+            0,
+            Math.floor(visibleStart + x * samplesPerPixel)
+          );
+          const endSample = Math.min(
+            sampleCount,
+            Math.floor(visibleStart + (x + 1) * samplesPerPixel)
+          );
+          if (endSample <= firstSample) {
+            continue;
+          }
+
+          let minSample = 1e9;
+          let maxSample = -1e9;
+          for (let index = firstSample; index < endSample; index++) {
+            const value = displayedSamples[index];
+            if (value < minSample) minSample = value;
+            if (value > maxSample) maxSample = value;
+          }
+
+          canvasContext.fillRect(
+            x,
+            sampleToY(maxSample),
+            1,
+            Math.max(1, sampleToY(minSample) - sampleToY(maxSample))
+          );
         }
       } else {
-        g.beginPath(); let f = true; const e = Math.min(N - 1, Math.ceil(vs + vn));
-        for (let i = Math.max(0, Math.floor(vs) - 1); i <= e; i++) { const x = (i - vs) / spp, y = Y(data[i]); f ? g.moveTo(x, y) : g.lineTo(x, y); f = false }
-        g.stroke();
-        if (spp < .25) for (let i = Math.max(0, Math.floor(vs)); i <= e; i++)g.fillRect((i - vs) / spp - 2, Y(data[i]) - 2, 4, 4)
-      }
-      // event markers
-      g.textBaseline = 'top';
-      for (const m of marks) {
-        const x = ((m.t + (parseFloat($('moff').value) || 0) / 1000) * sr - vs) / spp; if (x < 0 || x > W) continue;
-        g.strokeStyle = g.fillStyle = m.c; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); g.setLineDash([]); g.fillText(m.l, x + 3, 16)
-      }
-      // bars
-      const xa = (A - vs) / spp, xb = (B - vs) / spp;
-      g.fillStyle = '#f59e0b'; g.globalAlpha = .12; g.fillRect(Math.min(xa, xb), 0, Math.abs(xb - xa), H); g.globalAlpha = 1;
-      g.lineWidth = 2; g.font = 'bold 11px system-ui';
-      [[xa, '#f59e0b', 'M'], [xb, '#ec4899', 'B']].forEach(([x, c, l]) => {
-        g.strokeStyle = g.fillStyle = c; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
-        g.fillRect(x - 9, 0, 18, 14); g.fillStyle = '#000'; g.fillText(l, x - 3, 2)
-      });
-      g.lineWidth = 1;
-      // readouts
-      { const ms = Math.abs(B - A) / sr * 1000, dl = num('dly', 0); $('delta').textContent = dl ? ms.toFixed(3) + ' − ' + dl + ' = ' + (ms - dl).toFixed(3) + ' ms' : ms.toFixed(3) + ' ms' }
-      $('info').textContent = 'M ' + (A / sr * 1000).toFixed(3) + ' ms · B ' + (B / sr * 1000).toFixed(3) + ' ms · ' + sr + ' Hz · view ' + (vn / sr * 1000).toFixed(2) + ' ms';
-      th.style.left = vs / N * 100 + '%'; th.style.width = vn / N * 100 + '%';
-    }
-    const view = () => { vn = clamp(vn, Math.min(20, N), N); vs = clamp(vs, 0, N - vn); draw() };
-    function zoom(f, r) { const at = vs + r * vn; vn = clamp(vn * f, Math.min(20, N), N); vs = at - r * vn; view() }
-    cv.addEventListener('wheel', e => { e.preventDefault(); if (!data) return; zoom(e.deltaY < 0 ? .8 : 1.25, e.offsetX / cv.clientWidth) }, { passive: false });
-    cv.addEventListener('pointerdown', e => {
-      const spp = vn / cv.clientWidth, x = e.offsetX; cv.setPointerCapture(e.pointerId); lastX = x;
-      const da = Math.abs(x - (A - vs) / spp), db = Math.abs(x - (B - vs) / spp);
-      drag = Math.min(da, db) < 10 ? (da <= db ? 'a' : 'b') : 'pan'; if (drag === 'pan') cv.style.cursor = 'grabbing'
-    });
-    cv.addEventListener('pointermove', e => {
-      const spp = vn / cv.clientWidth, x = e.offsetX;
-      if (!drag) { const near = Math.min(Math.abs(x - (A - vs) / spp), Math.abs(x - (B - vs) / spp)) < 10; cv.style.cursor = near ? 'ew-resize' : 'grab'; return }
-      if (drag === 'pan') { vs -= (x - lastX) * spp; lastX = x; view() }
-      else { const s = clamp(vs + x * spp, 0, N); drag === 'a' ? A = s : B = s; draw() }
-    });
-    const end = () => { drag = null }; cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-    $('zi').onclick = () => zoom(.5, .5); $('zo').onclick = () => zoom(2, .5); $('fit').onclick = () => { vs = 0; vn = N; view() };
-    function applyThr() { if (!raw) return; const t = num('thr', 0) / 100 * peak; data = t > 0 ? raw.map(v => v < t && v > -t ? 0 : v) : raw; draw() }
-    // horizontal scrollbar
-    let off = 0, sdrag = false;
-    const sbMove = e => { const r = sb.getBoundingClientRect(); vs = (e.clientX - r.left - off) / r.width * N; view() };
-    sb.addEventListener('pointerdown', e => { sdrag = true; sb.setPointerCapture(e.pointerId); const tb = th.getBoundingClientRect(); off = e.target === th ? e.clientX - tb.left : tb.width / 2; sbMove(e) });
-    sb.addEventListener('pointermove', e => { if (sdrag) sbMove(e) });
-    sb.addEventListener('pointerup', () => sdrag = false);
-    new ResizeObserver(draw).observe(cv);
-    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', draw);
+        // At close zoom levels, draw individual sample points as a line.
+        canvasContext.beginPath();
+        let isFirstPoint = true;
+        const endSample = Math.min(
+          sampleCount - 1,
+          Math.ceil(visibleStart + visibleLength)
+        );
 
-    /* ---------- playback ---------- */
-    $('play').onclick = () => {
-      if (playing) { playing.stop(); return }
-      const i0 = Math.floor(Math.min(A, B)), i1 = Math.ceil(Math.max(A, B)); if (i1 - i0 < 2) return;
-      const buf = ctx.createBuffer(1, i1 - i0, sr); buf.copyToChannel(data.subarray(i0, i1), 0);
-      const s = ctx.createBufferSource(); s.buffer = buf; s.connect(ctx.destination);
-      s.onended = () => { playing = null; $('play').textContent = '▶ Play between bars' };
-      playing = s; $('play').textContent = '■ Stop playback'; ctx.resume(); s.start()
+        for (
+          let index = Math.max(0, Math.floor(visibleStart) - 1);
+          index <= endSample;
+          index++
+        ) {
+          const x = (index - visibleStart) / samplesPerPixel;
+          const y = sampleToY(displayedSamples[index]);
+
+          if (isFirstPoint) {
+            canvasContext.moveTo(x, y);
+            isFirstPoint = false;
+          } else {
+            canvasContext.lineTo(x, y);
+          }
+        }
+        canvasContext.stroke();
+
+        // Show sample dots when zoomed in far enough to inspect individual samples.
+        if (samplesPerPixel < 0.25) {
+          for (
+            let index = Math.max(0, Math.floor(visibleStart));
+            index <= endSample;
+            index++
+          ) {
+            const x = (index - visibleStart) / samplesPerPixel;
+            canvasContext.fillRect(
+              x - 2,
+              sampleToY(displayedSamples[index]) - 2,
+              4,
+              4
+            );
+          }
+        }
+      }
+
+      // Draw movement/click event markers recorded alongside the audio.
+      canvasContext.textBaseline = 'top';
+      const markerOffsetMs = parseFloat(byId('moff').value) || 0;
+      for (const marker of eventMarkers) {
+        const x =
+          ((marker.time + markerOffsetMs / 1000) * sampleRate - visibleStart) /
+          samplesPerPixel;
+        if (x < 0 || x > width) {
+          continue;
+        }
+
+        canvasContext.strokeStyle = marker.color;
+        canvasContext.fillStyle = marker.color;
+        canvasContext.setLineDash([4, 3]);
+        canvasContext.beginPath();
+        canvasContext.moveTo(x, 0);
+        canvasContext.lineTo(x, height);
+        canvasContext.stroke();
+        canvasContext.setLineDash([]);
+        canvasContext.fillText(marker.label, x + 3, 16);
+      }
+
+      // Highlight the measured interval and draw the draggable M and B markers.
+      const mouseMarkerX = (mouseMarker - visibleStart) / samplesPerPixel;
+      const beepMarkerX = (beepMarker - visibleStart) / samplesPerPixel;
+      canvasContext.fillStyle = '#f59e0b';
+      canvasContext.globalAlpha = 0.12;
+      canvasContext.fillRect(
+        Math.min(mouseMarkerX, beepMarkerX),
+        0,
+        Math.abs(beepMarkerX - mouseMarkerX),
+        height
+      );
+      canvasContext.globalAlpha = 1;
+      canvasContext.lineWidth = 2;
+      canvasContext.font = 'bold 11px system-ui';
+
+      for (const [x, color, label] of [
+        [mouseMarkerX, '#f59e0b', 'M'],
+        [beepMarkerX, '#ec4899', 'B']
+      ]) {
+        canvasContext.strokeStyle = color;
+        canvasContext.fillStyle = color;
+        canvasContext.beginPath();
+        canvasContext.moveTo(x, 0);
+        canvasContext.lineTo(x, height);
+        canvasContext.stroke();
+        canvasContext.fillRect(x - 9, 0, 18, 14);
+        canvasContext.fillStyle = '#000';
+        canvasContext.fillText(label, x - 3, 2);
+      }
+      canvasContext.lineWidth = 1;
+
+      // Report the interval after subtracting any configured beep delay.
+      const elapsedMs =
+        Math.abs(beepMarker - mouseMarker) / sampleRate * 1000;
+      const beepDelayMs = getNonNegativeInput('dly', 0);
+      byId('delta').textContent = beepDelayMs
+        ? elapsedMs.toFixed(3) + ' − ' + beepDelayMs + ' = ' +
+          (elapsedMs - beepDelayMs).toFixed(3) + ' ms'
+        : elapsedMs.toFixed(3) + ' ms';
+
+      byId('info').textContent =
+        'M ' + (mouseMarker / sampleRate * 1000).toFixed(3) +
+        ' ms · B ' + (beepMarker / sampleRate * 1000).toFixed(3) +
+        ' ms · ' + sampleRate + ' Hz · view ' +
+        (visibleLength / sampleRate * 1000).toFixed(2) + ' ms';
+
+      // Reflect the visible portion of the recording in the scrollbar thumb.
+      scrollbarThumb.style.left = visibleStart / sampleCount * 100 + '%';
+      scrollbarThumb.style.width = visibleLength / sampleCount * 100 + '%';
+    }
+
+    // Keep the visible sample range inside the recording and redraw the graph.
+    const updateView = () => {
+      visibleLength = clamp(visibleLength, Math.min(20, sampleCount), sampleCount);
+      visibleStart = clamp(visibleStart, 0, sampleCount - visibleLength);
+      drawGraph();
+    };
+
+    // Zoom around a relative point so the sample under the pointer stays put.
+    function zoomGraph(factor, anchorRatio) {
+      const anchorSample = visibleStart + anchorRatio * visibleLength;
+      visibleLength = clamp(
+        visibleLength * factor,
+        Math.min(20, sampleCount),
+        sampleCount
+      );
+      visibleStart = anchorSample - anchorRatio * visibleLength;
+      updateView();
+    }
+
+    canvas.addEventListener('wheel', event => {
+      event.preventDefault();
+      if (!displayedSamples) {
+        return;
+      }
+
+      zoomGraph(
+        event.deltaY < 0 ? 0.8 : 1.25,
+        event.offsetX / canvas.clientWidth
+      );
+    }, { passive: false });
+
+    canvas.addEventListener('pointerdown', event => {
+      const samplesPerPixel = visibleLength / canvas.clientWidth;
+      const pointerX = event.offsetX;
+      canvas.setPointerCapture(event.pointerId);
+      previousPointerX = pointerX;
+
+      const distanceToMouseMarker = Math.abs(
+        pointerX - (mouseMarker - visibleStart) / samplesPerPixel
+      );
+      const distanceToBeepMarker = Math.abs(
+        pointerX - (beepMarker - visibleStart) / samplesPerPixel
+      );
+
+      // Grab a marker when nearby; otherwise pan the waveform.
+      activeDrag = Math.min(distanceToMouseMarker, distanceToBeepMarker) < 10
+        ? (distanceToMouseMarker <= distanceToBeepMarker ? 'mouse' : 'beep')
+        : 'pan';
+
+      if (activeDrag === 'pan') {
+        canvas.style.cursor = 'grabbing';
+      }
+    });
+
+    canvas.addEventListener('pointermove', event => {
+      const samplesPerPixel = visibleLength / canvas.clientWidth;
+      const pointerX = event.offsetX;
+
+      if (!activeDrag) {
+        const nearMarker = Math.min(
+          Math.abs(pointerX - (mouseMarker - visibleStart) / samplesPerPixel),
+          Math.abs(pointerX - (beepMarker - visibleStart) / samplesPerPixel)
+        ) < 10;
+        canvas.style.cursor = nearMarker ? 'ew-resize' : 'grab';
+        return;
+      }
+
+      if (activeDrag === 'pan') {
+        visibleStart -= (pointerX - previousPointerX) * samplesPerPixel;
+        previousPointerX = pointerX;
+        updateView();
+        return;
+      }
+
+      const markerSample = clamp(
+        visibleStart + pointerX * samplesPerPixel,
+        0,
+        sampleCount
+      );
+      if (activeDrag === 'mouse') {
+        mouseMarker = markerSample;
+      } else {
+        beepMarker = markerSample;
+      }
+      drawGraph();
+    });
+
+    const endGraphDrag = () => {
+      activeDrag = null;
+      canvas.style.cursor = 'grab';
+    };
+    canvas.addEventListener('pointerup', endGraphDrag);
+    canvas.addEventListener('pointercancel', endGraphDrag);
+
+    byId('zi').onclick = () => zoomGraph(0.5, 0.5);
+    byId('zo').onclick = () => zoomGraph(2, 0.5);
+    byId('fit').onclick = () => {
+      visibleStart = 0;
+      visibleLength = sampleCount;
+      updateView();
+    };
+
+    // Zero samples whose amplitude falls below the chosen percentage of the peak.
+    function applyThreshold() {
+      if (!originalSamples) {
+        return;
+      }
+
+      const threshold =
+        getNonNegativeInput('thr', 0) / 100 * peakAmplitude;
+      displayedSamples = threshold > 0
+        ? originalSamples.map(value =>
+          value < threshold && value > -threshold ? 0 : value
+        )
+        : originalSamples;
+      drawGraph();
+    }
+
+    /* ---------- horizontal scrollbar ---------- */
+    let scrollbarPointerOffset = 0;
+    let isScrollbarDragging = false;
+
+    const moveScrollbarToPointer = event => {
+      const bounds = scrollbar.getBoundingClientRect();
+      visibleStart =
+        (event.clientX - bounds.left - scrollbarPointerOffset) /
+        bounds.width * sampleCount;
+      updateView();
+    };
+
+    scrollbar.addEventListener('pointerdown', event => {
+      isScrollbarDragging = true;
+      scrollbar.setPointerCapture(event.pointerId);
+
+      const thumbBounds = scrollbarThumb.getBoundingClientRect();
+      scrollbarPointerOffset = event.target === scrollbarThumb
+        ? event.clientX - thumbBounds.left
+        : thumbBounds.width / 2;
+      moveScrollbarToPointer(event);
+    });
+
+    scrollbar.addEventListener('pointermove', event => {
+      if (isScrollbarDragging) {
+        moveScrollbarToPointer(event);
+      }
+    });
+    scrollbar.addEventListener('pointerup', () => {
+      isScrollbarDragging = false;
+    });
+
+    // Redraw on layout or system color-scheme changes.
+    new ResizeObserver(drawGraph).observe(canvas);
+    matchMedia('(prefers-color-scheme:dark)').addEventListener(
+      'change',
+      drawGraph
+    );
+
+    /* ---------- playback between markers ---------- */
+    byId('play').onclick = () => {
+      if (playbackSource) {
+        playbackSource.stop();
+        return;
+      }
+
+      const firstSample = Math.floor(Math.min(mouseMarker, beepMarker));
+      const endSample = Math.ceil(Math.max(mouseMarker, beepMarker));
+      if (endSample - firstSample < 2) {
+        return;
+      }
+
+      const context = getAudioContext();
+      const buffer = context.createBuffer(
+        1,
+        endSample - firstSample,
+        sampleRate
+      );
+      buffer.copyToChannel(
+        displayedSamples.subarray(firstSample, endSample),
+        0
+      );
+
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.onended = () => {
+        playbackSource = null;
+        byId('play').textContent = '▶ Play between bars';
+      };
+
+      playbackSource = source;
+      byId('play').textContent = '■ Stop playback';
+      context.resume();
+      source.start();
     };
   </script>
 </body>
