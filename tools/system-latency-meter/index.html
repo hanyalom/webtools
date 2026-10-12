@@ -173,6 +173,40 @@
       opacity: .85
     }
 
+    #guide {
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel)
+    }
+
+    #guide summary {
+      font-weight: 600
+    }
+
+    #guide p {
+      margin: 10px 0
+    }
+
+    #guide ol {
+      margin: 8px 0 0;
+      padding-left: 24px
+    }
+
+    #guide li {
+      margin: 8px 0
+    }
+
+    .advanced-note {
+      margin: 6px 0 6px 8px;
+      padding-left: 10px;
+      border-left: 2px solid var(--line);
+      color: var(--fg);
+      opacity: .65;
+      font-size: .94em
+    }
+
     label {
       display: flex;
       gap: 6px;
@@ -192,11 +226,38 @@
 </head>
 
 <body>
-  <h1>Mouse / sound latency meter</h1>
+  <h1>System Latency Meter</h1>
+  <details id="guide">
+    <summary>What this tool does and how to use it</summary>
+    <p>This tool helps you manually measure the time from a mouse click 🖱️ to the beep 🔊 produced when the system
+      registers that click. It records both sounds through your microphone. On the waveform, place <strong>M</strong> at the start of
+      the <strong>M</strong>ouse click 🖱️ sound and <strong>B</strong> at the start of the <strong>B</strong>eep 🔊 sound; the result shows the elapsed time, adjusted
+      for any beep 🔊 delay you set.</p>
+    <ol>
+      <li>Take your headset off.</li>
+      <li>Place your headset's microphone as close as possible to the mouse 🖱️ button.</li>
+      <li>Disable noise cancellation and similar audio processing in your microphone driver or software 
+        (for example, SteelSeries GG) so the microphone picks up the mouse click 🖱️ sounds clearly.</li>
+      <li>Turn up your headset volume enough for the microphone to clearly pick up the beep 🔊.</li>
+      <li>Press <strong>Start recording</strong> and keep quiet.</li>
+      <li>Click the large test area to trigger the beep 🔊. You can click more than once if you want to record several
+        attempts.</li>
+      <li>Press <strong>Stop recording</strong> to display the sound graph.</li>
+      <li>Use the mouse wheel over the graph to zoom in or out. Move the yellow <strong>M</strong> bar to the beginning
+        of the <strong>M</strong>ouse click 🖱️ sound, and the magenta <strong>B</strong> bar to the beginning of the <strong>B</strong>eep 🔊 sound. The
+        measured latency appears below the graph.</li>
+    </ol>
+    <div class="advanced-note">Advanced: If the beep 🔊 is too short or long, adjust its duration in <strong>Beep 🔊
+      options</strong>.</div>
+    <div class="advanced-note">Advanced: If the click sound is too close to the beep 🔊, add a delay in <strong>Beep 🔊
+      options</strong>. The tool subtracts this added delay from the displayed measurement.</div>
+    <div class="advanced-note">Advanced: If the waveform is noisy, increase <strong>Zero sound below (% of peak)</strong>
+      in <strong>Sound graph options</strong> to remove low-level microphone noise.</div>
+  </details>
   <div class="row"><button id="rec">● Start recording</button><button id="stop" disabled>■ Stop recording</button><span
       id="stat">Idle</span></div>
   <details id="adv">
-    <summary>Beep options</summary>
+    <summary>Beep 🔊 options</summary>
     <div class="row">
       <label>Frequency (Hz) <input id="freq" type="number" value="2500" min="20" max="20000"></label>
       <label>Duration (ms) <input id="dur" type="number" value="80" min="1"></label>
@@ -207,7 +268,7 @@
   <div id="res">
     <div class="row"><button id="zi">Zoom +</button><button id="zo">Zoom −</button><button id="fit">Fit
         all</button><button id="play">▶ Play between bars</button>
-      <span class="sm">Wheel = zoom · drag empty area = pan · drag S/E bars</span>
+      <span class="sm">Wheel = zoom · drag empty area = pan · drag M/B bars</span>
     </div>
     <details id="gopt">
       <summary>Sound graph options</summary>
@@ -223,8 +284,8 @@
       <div id="th"></div>
     </div>
     <div class="row"><span id="delta">0 ms</span><span class="sm" id="info"></span></div>
-    <div class="sm">Markers: green = mouse click (beep command), blue = movement start, purple = scheduled beep (when a
-      delay is set). The beep should appear in the waveform after the green marker.</div>
+    <div class="sm">Markers: green = mouse click 🖱️ (beep 🔊 command), blue = movement start, purple = scheduled beep 🔊
+      (when a delay is set). The beep 🔊 should appear in the waveform after the green marker.</div>
   </div>
   <script>
     const $ = id => document.getElementById(id), clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -335,14 +396,14 @@ if(this.n==2048){this.port.postMessage(this.b);this.b=new Float32Array(2048);thi
       const xa = (A - vs) / spp, xb = (B - vs) / spp;
       g.fillStyle = '#f59e0b'; g.globalAlpha = .12; g.fillRect(Math.min(xa, xb), 0, Math.abs(xb - xa), H); g.globalAlpha = 1;
       g.lineWidth = 2; g.font = 'bold 11px system-ui';
-      [[xa, '#f59e0b', 'S'], [xb, '#ec4899', 'E']].forEach(([x, c, l]) => {
+      [[xa, '#f59e0b', 'M'], [xb, '#ec4899', 'B']].forEach(([x, c, l]) => {
         g.strokeStyle = g.fillStyle = c; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
         g.fillRect(x - 9, 0, 18, 14); g.fillStyle = '#000'; g.fillText(l, x - 3, 2)
       });
       g.lineWidth = 1;
       // readouts
       { const ms = Math.abs(B - A) / sr * 1000, dl = num('dly', 0); $('delta').textContent = dl ? ms.toFixed(3) + ' − ' + dl + ' = ' + (ms - dl).toFixed(3) + ' ms' : ms.toFixed(3) + ' ms' }
-      $('info').textContent = 'S ' + (A / sr * 1000).toFixed(3) + ' ms · E ' + (B / sr * 1000).toFixed(3) + ' ms · ' + sr + ' Hz · view ' + (vn / sr * 1000).toFixed(2) + ' ms';
+      $('info').textContent = 'M ' + (A / sr * 1000).toFixed(3) + ' ms · B ' + (B / sr * 1000).toFixed(3) + ' ms · ' + sr + ' Hz · view ' + (vn / sr * 1000).toFixed(2) + ' ms';
       th.style.left = vs / N * 100 + '%'; th.style.width = vn / N * 100 + '%';
     }
     const view = () => { vn = clamp(vn, Math.min(20, N), N); vs = clamp(vs, 0, N - vn); draw() };
