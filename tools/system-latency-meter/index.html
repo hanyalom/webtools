@@ -731,6 +731,9 @@
         $('rec').disabled = false;
         $('stat').textContent = (N / sr).toFixed(2) + ' s recorded';
         draw();
+        requestAnimationFrame(() => {
+          $('zi').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
       }, 80);
     };
 
