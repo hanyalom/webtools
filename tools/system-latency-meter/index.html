@@ -173,40 +173,6 @@
       opacity: .85
     }
 
-    #guide {
-      margin: 0 0 14px;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--panel)
-    }
-
-    #guide summary {
-      font-weight: 600
-    }
-
-    #guide p {
-      margin: 10px 0
-    }
-
-    #guide ol {
-      margin: 8px 0 0;
-      padding-left: 24px
-    }
-
-    #guide li {
-      margin: 8px 0
-    }
-
-    .advanced-note {
-      margin: 6px 0 6px 8px;
-      padding-left: 10px;
-      border-left: 2px solid var(--line);
-      color: var(--fg);
-      opacity: .65;
-      font-size: .94em
-    }
-
     label {
       display: flex;
       gap: 6px;
@@ -222,53 +188,293 @@
       background: var(--panel);
       color: var(--fg)
     }
+
+    /* intro text + Auto/Manual tabs */
+    h2 {
+      font-size: 15px;
+      margin: 16px 0 4px
+    }
+
+    p {
+      margin: 4px 0
+    }
+
+    ol {
+      margin: 4px 0;
+      padding-left: 22px
+    }
+
+    .advanced-note {
+      margin: 6px 0 6px 8px;
+      padding-left: 10px;
+      border-left: 2px solid var(--line);
+      opacity: .65;
+      font-size: .94em
+    }
+
+    .how-to-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(180px, 30%);
+      gap: 16px;
+      align-items: center
+    }
+
+    .setup-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px
+    }
+
+    @media (max-width: 600px) {
+      .how-to-layout {
+        grid-template-columns: 1fr
+      }
+
+      .setup-image {
+        max-width: 320px;
+        margin: 0 auto
+      }
+    }
+
+    .tabs {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      margin: 10px 0 0;
+      border-bottom: 2px solid var(--line)
+    }
+
+    .tab {
+      border-radius: 8px 8px 0 0;
+      border-bottom: none;
+      margin-bottom: 0;
+      padding: 8px 24px;
+      background: var(--grid);
+      opacity: .7
+    }
+
+    .tabpanel {
+      border: 1px solid var(--line);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 8px 12px;
+      background: var(--panel);
+      margin-bottom: 12px
+    }
+
+    summary b {
+      font-size: 15px
+    }
+
+    .tab[aria-selected=true] {
+      background: var(--panel);
+      opacity: 1;
+      font-weight: 600;
+      margin-bottom: -2px;
+      border-bottom: 2px solid var(--panel)
+    }
+
+    /* the body's data-mode attribute decides which parts are visible */
+    body[data-mode=auto] .manual-only,
+    body[data-mode=manual] .auto-only {
+      display: none
+    }
+
+    /* table of detected events */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+      margin-top: 8px
+    }
+
+    th,
+    td {
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left
+    }
+
+    select {
+      font: inherit;
+      padding: 5px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--fg)
+    }
+
+    .frame-calculator {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--bg)
+    }
+
+    .frame-calculator label {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(120px, 220px);
+      gap: 16px;
+      align-items: center;
+      font-weight: 600
+    }
+
+    .frame-calculator input {
+      width: 100%;
+      min-height: 38px
+    }
+
+    .frame-calculator-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px
+    }
+
+    .frame-calculator button {
+      min-height: 38px;
+      background: var(--wave);
+      color: #fff;
+      border-color: var(--wave)
+    }
+
+    #frame-result {
+      align-self: center;
+      font-size: 20px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums
+    }
+
+    #frame-speed-help {
+      display: block
+    }
+
+    @media (max-width: 480px) {
+      .frame-calculator label {
+        grid-template-columns: minmax(0, 1fr) minmax(90px, 120px);
+        gap: 8px;
+        font-size: 14px
+      }
+
+      .frame-calculator {
+        padding: 12px
+      }
+    }
   </style>
 </head>
 
-<body>
+<body data-mode="auto">
   <h1>System Latency Meter</h1>
-  <details id="guide">
-    <summary>What this tool does and how to use it</summary>
-    <p>This tool helps you manually measure the time from a mouse click 🖱️ to the beep 🔊 produced when the system
-      registers that click. It records both sounds through your microphone. On the waveform, place <strong>M</strong> at the start of
-      the <strong>M</strong>ouse click 🖱️ sound and <strong>B</strong> at the start of the <strong>B</strong>eep 🔊 sound; the result shows the elapsed time, adjusted
-      for any beep 🔊 delay you set.</p>
-    <ol>
-      <li>Take your headset off.</li>
-      <li>Place your headset's microphone as close as possible to the mouse 🖱️ button.</li>
-      <li>Disable noise cancellation and similar audio processing in your microphone driver or software 
-        (for example, SteelSeries GG) so the microphone picks up the mouse click 🖱️ sounds clearly.</li>
-      <li>Turn up your headset volume enough for the microphone to clearly pick up the beep 🔊.</li>
-      <li>Press <strong>Start recording</strong> and keep quiet.</li>
-      <li>Click the large test area to trigger the beep 🔊. You can click more than once if you want to record several
-        attempts.</li>
-      <li>Press <strong>Stop recording</strong> to display the sound graph.</li>
-      <li>Use the mouse wheel over the graph to zoom in or out. Move the yellow <strong>M</strong> bar to the beginning
-        of the <strong>M</strong>ouse click 🖱️ sound, and the magenta <strong>B</strong> bar to the beginning of the <strong>B</strong>eep 🔊 sound. The
-        measured latency appears below the graph.</li>
-    </ol>
-    <div class="advanced-note">Advanced: If the beep 🔊 is too short or long, adjust its duration in <strong>Beep 🔊
-      options</strong>.</div>
-    <div class="advanced-note">Advanced: If the click sound is too close to the beep 🔊, add a delay in <strong>Beep 🔊
-      options</strong>. The tool subtracts this added delay from the displayed measurement.</div>
-    <div class="advanced-note">Advanced: If the waveform is noisy, increase <strong>Zero sound below (% of peak)</strong>
-      in <strong>Sound graph options</strong> to remove low-level microphone noise.</div>
+  <details open>
+    <summary><b>What this tool does</b></summary>
+    <p>This tool can measure <b>Mouse to Sound latency.</b></p>
+    <p>Record mouse clicks sound and speaker beeps using the microphone to measure the time until the system responds.
+      Choose Auto to detect and average multiple attempts, or Manual to measure between two points on the sound graph.
+    </p>
   </details>
+  <br>
+  <details close>
+    <summary><b>Extra functionality: Mouse to Screen latency</b></summary>
+    <p>This tool can be used to measure Mouse to Screen latency.</p>
+    <p>Using a high-speed camera (or a phone with slow-motion video), you can visually measure the time between the
+      mouse moving and the screen response.</p>
+    <ol>
+      <li>Record the screen with the high-speed camera while performing the mouse click.</li>
+      <li>Analyze the video frame by frame counting the frames between the mouse movement and the screen response.</li>
+      <li>Calculate the latency by dividing the number of frames by the camera's frame rate.</li>
+    </ol>
+    <div class="advanced-note">If the video is regular speed (not slow motion), enter <b>1</b> for
+      Slow-motion speed.
+    </div>
+    <div class="frame-calculator" aria-label="Mouse-to-screen latency calculator">
+      <label>Slow-motion speed (e.g. 1/8) <input id="frame-speed" type="text" value="1/8" inputmode="decimal"
+          aria-describedby="frame-speed-help"></label>
+      <label>Saved video frame rate (fps) <input id="frame-rate" type="number" value="30" min="0.001"
+          step="any"></label>
+      <label>Frames between movement and response <input id="frame-count" type="number" value="7" min="0"
+          step="any"></label>
+      <span class="sm" id="frame-speed-help">Latency (ms) = (frames ÷ saved fps) × slow-motion speed × 1000.
+        Enter 1 for regular-speed video; enter a fraction such as 1/8 for slow motion.</span>
+      <div class="frame-calculator-actions">
+        <output id="frame-result" aria-live="polite">29.167 ms</output>
+        <button id="frame-calculate" type="button">Calculate</button>
+      </div>
+    </div>
+  </details>
+  <br>
+  <h1>Select mode:</h1>
+  <div class="tabs" role="tablist"><button class="tab" id="tab-auto" onclick="setMode('auto')">Auto</button><button
+      class="tab" id="tab-manual" onclick="setMode('manual')">Manual</button></div>
+  <div class="tabpanel">
+    <details open>
+      <summary><b>How to use it</b></summary>
+      <div class="how-to-layout">
+        <ol>
+          <li>Take your headset off and place its microphone as close as possible to the mouse button. The picture
+            shows the recommended setup.</li>
+          <li>Disable noise cancellation and similar audio processing in your microphone driver or software (for
+            example, SteelSeries GG) so the microphone can clearly pick up the mouse click.</li>
+          <li>Turn up your headset volume enough for the microphone to clearly pick up the beep.</li>
+          <li>Press <b>Start recording</b> and keep quiet.</li>
+          <li>Click the large test area and keep the mouse button <b><u>pressed until you hear the beep</u></b>, then
+            release.
+            Repeat 3 to 5 times for a better Auto result; Auto calculates the average latency.</li>
+          <li>Press <b>Stop recording</b> and the sound graph will be displayed.</li>
+          <li>Zoom in or out with the mouse wheel. Pan by dragging an empty area of the graph or using the
+            scrollbar.</li>
+        </ol>
+        <img class="setup-image" src="1.png" alt="Headset with its microphone positioned close to a mouse button">
+      </div>
+      <ol class="manual-only" start="8">
+        <li>Move the yellow <b>M</b> marker to the beginning of the <b>M</b>ouse click sound, then move the magenta
+          <b>B</b> marker to the beginning of the <b>B</b>eep sound. The measured latency appears below the graph.
+        </li>
+      </ol>
+      <ol class="auto-only" start="8">
+        <li>The tool auto detects clicks and beeps and calculates the average latency.</li>
+        <li>Make sure all clicks and beeps are correctly detected and at the beginning of the respective sounds.
+          Adjust each event by dragging its marker or editing its table entry; remove unwanted events or add missing
+          ones with the table controls.</li>
+      </ol>
+      <div class="advanced-note">Press <b>Recalculate</b> to run automatic detection again using the
+        current settings. <b>Undo</b> and <b>Redo</b> cover edits.
+      </div>
+      <div class="advanced-note">Advanced: If the beep is too short or long, adjust its duration in
+        <b>Beep options</b>.
+      </div>
+      <div class="advanced-note">Advanced: If the mouse-click sound is too close to the beep, add a
+        delay in <b>Beep options</b>. The tool subtracts this added delay from the displayed measurement.</div>
+      <div class="advanced-note">Advanced: If the graph is noisy, increase <b>Zero sound below (% of
+          peak)</b> in <b>Sound graph options</b> to remove low-level microphone noise.</div>
+      <div class="advanced-note auto-only">Auto mode sets <b>Zero sound below (% of peak)</b> automatically after
+        recording to silence low-level background noise. You can adjust it to remove more noise, or lower it if
+        quiet parts of the recording disappear.</div>
+      <div class="advanced-note auto-only"><b>Click threshold (% of peak)</b> sets how loud a brief sound must be
+        to count as a click. Raise it to ignore noise that is being mistaken for clicks; lower it if real clicks
+        are not detected. Press <b>Recalculate</b> after changing it.</div>
+    </details>
+  </div>
   <div class="row"><button id="rec">● Start recording</button><button id="stop" disabled>■ Stop recording</button><span
       id="stat">Idle</span></div>
   <details id="adv">
-    <summary>Beep 🔊 options</summary>
+    <summary>Beep options</summary>
     <div class="row">
       <label>Frequency (Hz) <input id="freq" type="number" value="2500" min="20" max="20000"></label>
-      <label>Duration (ms) <input id="dur" type="number" value="80" min="1"></label>
-      <label>Delay after click (ms) <input id="dly" type="number" value="0" min="0" step="any" oninput="draw()"></label>
+      <label>Duration (ms) <input id="dur" type="number" value="80" min="1" oninput="refresh()"></label>
+      <label>Delay after click (ms) <input id="dly" type="number" value="0" min="0" step="any"
+          oninput="refresh()"></label>
     </div>
   </details>
   <div id="box" data-s="red">Move · Click</div>
   <div id="res">
     <div class="row"><button id="zi">Zoom +</button><button id="zo">Zoom −</button><button id="fit">Fit
-        all</button><button id="play">▶ Play between bars</button>
-      <span class="sm">Wheel = zoom · drag empty area = pan · drag M/B bars</span>
+        all</button><button id="play" class="manual-only">▶ Play between bars</button>
+      <span class="sm">Wheel = zoom · drag empty area = pan · drag S/E bars</span>
     </div>
     <details id="gopt">
       <summary>Sound graph options</summary>
@@ -283,199 +489,172 @@
     <div id="sb">
       <div id="th"></div>
     </div>
-    <div class="row"><span id="delta">0 ms</span><span class="sm" id="info"></span></div>
-    <div class="sm">Markers: green = mouse click 🖱️ (beep 🔊 command), blue = movement start, purple = scheduled beep 🔊
-      (when a delay is set). The beep 🔊 should appear in the waveform after the green marker.</div>
+    <div class="row manual-only"><span id="delta">0 ms</span><span class="sm" id="info"></span></div>
+    <!-- Auto mode: detection settings, edit tools and the list of detected clicks and beeps -->
+    <div class="auto-only">
+      <div class="row"><label>Click threshold (% of peak) <input id="dthr" type="number" value="15" min="1"
+            max="100"></label>
+        <button onclick="recalc()">↻ Recalculate</button>
+        <button id="undo" onclick="undo()">↶ Undo</button><button id="redo" onclick="redo()">↷ Redo</button>
+        <button onclick="addEvent('click')">+ Click</button><button onclick="addEvent('beep')">+ Beep</button>
+      </div>
+      <div class="sm">Red = click (mouse down) · green = beep start, dashed line = beep end (comes from Duration, not
+        draggable). Drag a start line on the graph or edit the table. Remove a mouse-up click with ✕.</div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Event</th>
+            <th>Start (ms)</th>
+            <th>Delay after click (ms)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+        <tfoot id="avg"></tfoot>
+      </table>
+    </div>
+    <div class="sm">Dashed lines (shown when Delay after click is above 0): purple = click (moment the page received
+      the mouse click) · teal = scheduled beep (click + the Delay set in Beep options).</div>
   </div>
   <script>
-    // Shortcuts for DOM lookups and keeping a value within a range.
-    const byId = id => document.getElementById(id);
+    const $ = id => document.getElementById(id);
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    // Audio capture state.
-    let audioContext;
-    let microphoneStream;
-    let recorderNode;
-    let microphoneSource;
-    let silentOutput;
-    let audioChunks = [];
-    let eventMarkers = [];
-    let recordingStartTime = 0;
-    let isRecording = false;
+    let ctx;
+    let stream;
+    let node;
+    let src;
+    let mute;
+    let chunks = [];
+    let marks = [];
+    let recStart = 0;
+    let recording = false;
 
-    // Recorded waveform and graph state. Marker positions are sample indexes.
-    let originalSamples;
-    let displayedSamples;
-    let sampleCount = 0;
-    let sampleRate = 48000;
-    let peakAmplitude = 1;
-    let visibleStart = 0;
-    let visibleLength = 1;
-    let mouseMarker = 0;
-    let beepMarker = 0;
-    let activeDrag = null;
-    let previousPointerX = 0;
-    let playbackSource = null;
+    let events = [];
+    let hist = [];
+    let future = [];
+    let evDrag = null;
+    let mode = 'auto';
+    let raw;
+    let data;
+    let N = 0;
+    let sr = 48000;
+    let peak = 1;
+    let vs = 0;
+    let vn = 1;
+    let A = 0;
+    let B = 0;
+    let drag = null;
+    let lastX = 0;
+    let playing = null;
 
-    // Frequently used page elements.
-    const testArea = byId('box');
-    const canvas = byId('cv');
-    const canvasContext = canvas.getContext('2d');
-    const scrollbar = byId('sb');
-    const scrollbarThumb = byId('th');
+    const box = $('box');
+    const cv = $('cv');
+    const g = cv.getContext('2d');
+    const sb = $('sb');
+    const th = $('th');
 
-    // Reuse one interactive AudioContext for recording, the beep, and playback.
-    const getAudioContext = () => audioContext || (
-      audioContext = new AudioContext({ latencyHint: 'interactive' })
-    );
-
-    // Parse a non-negative numeric input, falling back when it is blank or invalid.
-    const getNonNegativeInput = (id, fallback) => {
-      const value = parseFloat(byId(id).value);
+    const getCtx = () => ctx || (ctx = new AudioContext({ latencyHint: 'interactive' }));
+    const num = (id, fallback) => {
+      const value = parseFloat($(id).value);
       return value >= 0 ? value : fallback;
     };
 
-    /* ---------- test area and beep ---------- */
-    let isPointerPressed = false;
-    let pointerIdleTimeout;
+    /* ---------- test box ---------- */
+    let pressed = false, mt;
+    const setS = state => box.dataset.s = state;
 
-    const setTestAreaState = state => {
-      testArea.dataset.s = state;
-    };
+    // Convert the pointer event's timestamp to the recording's audio-clock timeline.
+    const evT = event =>
+      ctx.currentTime - (performance.now() - event.timeStamp) / 1000 - recStart;
 
-    // Convert an event timestamp into seconds relative to the recording start.
-    const getRecordingTime = event =>
-      audioContext.currentTime -
-      (performance.now() - event.timeStamp) / 1000 -
-      recordingStartTime;
-
-    function playBeep() {
-      const context = getAudioContext();
-      if (context.state !== 'running') {
-        context.resume();
-      }
+    function beep() {
+      const context = getCtx();
+      if (context.state !== 'running') context.resume();
 
       const oscillator = context.createOscillator();
       const gain = context.createGain();
       oscillator.type = 'square';
-      oscillator.frequency.value = getNonNegativeInput('freq', 2500);
+      oscillator.frequency.value = num('freq', 2500);
       gain.gain.value = 1;
       oscillator.connect(gain).connect(context.destination);
 
-      // Schedule the beep after the optional delay and stop it after its duration.
-      const beepStartTime =
-        context.currentTime + getNonNegativeInput('dly', 0) / 1000;
-      oscillator.start(beepStartTime);
-      oscillator.stop(
-        beepStartTime + getNonNegativeInput('dur', 80) / 1000
-      );
-      return beepStartTime;
+      const start = context.currentTime + num('dly', 0) / 1000;
+      oscillator.start(start);
+      oscillator.stop(start + num('dur', 80) / 1000);
+      return start;
     }
 
-    testArea.addEventListener('pointerdown', event => {
-      isPointerPressed = true;
-      testArea.setPointerCapture(event.pointerId);
-      setTestAreaState('green');
-      playBeep();
+    box.addEventListener('pointerdown', e => {
+      pressed = true;
+      box.setPointerCapture(e.pointerId);
+      setS('green');
+      beep();
 
-      if (isRecording) {
-        const clickTime = getRecordingTime(event);
-        const delayMs = getNonNegativeInput('dly', 0);
+      if (recording) marks.push({ t: evT(e), c: '#a855f7', l: 'click' });
+    }); // Purple dashed line marks when the page received the pointer event.
 
-        eventMarkers.push({
-          time: clickTime,
-          color: '#22a04b',
-          label: 'click'
-        });
-
-        if (delayMs > 0) {
-          eventMarkers.push({
-            time: clickTime + delayMs / 1000,
-            color: '#a855f7',
-            label: 'beep'
-          });
-        }
-      }
-    });
-
-    const releasePointer = () => {
-      isPointerPressed = false;
-      clearTimeout(pointerIdleTimeout);
-      setTestAreaState('red');
+    const up = () => {
+      pressed = false;
+      clearTimeout(mt);
+      setS('red');
     };
 
-    testArea.addEventListener('pointerup', releasePointer);
-    testArea.addEventListener('pointercancel', releasePointer);
-    testArea.addEventListener('pointerleave', () => {
-      if (!isPointerPressed) {
-        releasePointer();
-      }
+    box.addEventListener('pointerup', up);
+    box.addEventListener('pointercancel', up);
+    box.addEventListener('pointerleave', () => {
+      if (!pressed) up();
     });
 
-    testArea.addEventListener('pointermove', event => {
-      if (isPointerPressed) {
-        return;
-      }
+    box.addEventListener('pointermove', e => {
+      if (pressed) return;
 
-      // Mark the first movement in each movement streak, not every pointer event.
-      if (testArea.dataset.s !== 'blue' && isRecording) {
-        eventMarkers.push({
-          time: getRecordingTime(event),
-          color: '#3b82f6',
-          label: 'move'
-        });
-      }
-
-      setTestAreaState('blue');
-      clearTimeout(pointerIdleTimeout);
-      pointerIdleTimeout = setTimeout(() => {
-        if (!isPointerPressed) {
-          setTestAreaState('red');
-        }
+      setS('blue');
+      clearTimeout(mt);
+      mt = setTimeout(() => {
+        if (!pressed) setS('red');
       }, 120);
     });
 
-    /* ---------- microphone recording ---------- */
-    // The worklet forwards audio in chunks and flushes its final partial chunk on request.
-    const recorderWorkletCode = `
-      class RecorderProcessor extends AudioWorkletProcessor {
-        constructor() {
-          super();
-          this.buffer = new Float32Array(2048);
-          this.bufferLength = 0;
-
-          this.port.onmessage = () => {
-            this.port.postMessage(this.buffer.slice(0, this.bufferLength));
-            this.bufferLength = 0;
-          };
-        }
-
-        process(inputs) {
-          const channel = inputs[0][0];
-          if (!channel) {
-            return true;
-          }
-
-          for (let index = 0; index < channel.length; index++) {
-            this.buffer[this.bufferLength++] = channel[index];
-
-            if (this.bufferLength === this.buffer.length) {
-              this.port.postMessage(this.buffer);
-              this.buffer = new Float32Array(2048);
-              this.bufferLength = 0;
+    /* ---------- recording ---------- */
+    // Buffer audio in chunks so the main thread only receives occasional messages.
+    const WK = `
+         class RecorderProcessor extends AudioWorkletProcessor {
+            constructor() {
+               super();
+               this.buffer = new Float32Array(2048);
+               this.length = 0;
+               this.port.onmessage = () => this.flush();
             }
-          }
 
-          return true;
-        }
-      }
+            flush() {
+               this.port.postMessage(this.buffer.slice(0, this.length));
+               this.length = 0;
+            }
 
-      registerProcessor('r', RecorderProcessor);
-    `;
+            process(inputs) {
+               const channel = inputs[0][0];
+               if (!channel) return true;
 
-    byId('rec').onclick = async () => {
+               for (let i = 0; i < channel.length; i++) {
+                  this.buffer[this.length++] = channel[i];
+                  if (this.length === this.buffer.length) {
+                     this.port.postMessage(this.buffer);
+                     this.buffer = new Float32Array(2048);
+                     this.length = 0;
+                  }
+               }
+               return true;
+            }
+         }
+
+         registerProcessor('r', RecorderProcessor);
+      `;
+
+    $('rec').onclick = async () => {
       try {
-        microphoneStream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: false,
             noiseSuppression: false,
@@ -483,530 +662,738 @@
             channelCount: 1
           }
         });
+        const c = getCtx();
+        await c.resume();
 
-        const context = getAudioContext();
-        await context.resume();
-
-        microphoneSource = context.createMediaStreamSource(microphoneStream);
-        silentOutput = context.createGain();
-        silentOutput.gain.value = 0;
-        silentOutput.connect(context.destination);
-
-        audioChunks = [];
-        eventMarkers = [];
+        src = c.createMediaStreamSource(stream);
+        mute = c.createGain();
+        mute.gain.value = 0;
+        mute.connect(c.destination);
+        chunks = []; marks = [];
 
         try {
-          const workletUrl = URL.createObjectURL(
-            new Blob([recorderWorkletCode], { type: 'text/javascript' })
-          );
-          await context.audioWorklet.addModule(workletUrl);
-
-          recorderNode = new AudioWorkletNode(context, 'r');
-          recorderNode.port.onmessage = event => {
-            audioChunks.push(event.data);
-          };
+          await c.audioWorklet.addModule(URL.createObjectURL(new Blob([WK], { type: 'text/javascript' })));
+          node = new AudioWorkletNode(c, 'r'); node.port.onmessage = e => chunks.push(e.data);
         } catch (_) {
-          // Use ScriptProcessorNode on browsers without AudioWorklet support.
-          recorderNode = context.createScriptProcessor(1024, 1, 1);
-          recorderNode.onaudioprocess = event => {
-            audioChunks.push(
-              new Float32Array(event.inputBuffer.getChannelData(0))
-            );
-          };
+          // Use ScriptProcessor on browsers without AudioWorklet support.
+          node = c.createScriptProcessor(1024, 1, 1); node.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
         }
 
-        microphoneSource.connect(recorderNode);
-        recorderNode.connect(silentOutput);
-
-        recordingStartTime = context.currentTime;
-        isRecording = true;
-        byId('rec').disabled = true;
-        byId('stop').disabled = false;
-        byId('stat').textContent = 'Recording… move / click the box';
-      } catch (error) {
-        byId('stat').textContent = 'Mic error: ' + error.message;
-      }
+        src.connect(node);
+        node.connect(mute);
+        recStart = c.currentTime;
+        recording = true;
+        $('rec').disabled = true; $('stop').disabled = false; $('stat').textContent = 'Recording… move / click the box';
+      } catch (err) { $('stat').textContent = 'Mic error: ' + err.message }
     };
 
-    byId('stop').onclick = () => {
-      isRecording = false;
-      byId('stop').disabled = true;
-      byId('stat').textContent = 'Processing…';
+    $('stop').onclick = () => {
+      recording = false;
+      $('stop').disabled = true;
+      $('stat').textContent = 'Processing…';
 
-      // Ask the worklet to send any audio remaining in its partial buffer.
-      if (recorderNode.port) {
-        recorderNode.port.postMessage('flush');
-      }
-
+      // Ask the worklet to send any samples left in its partial buffer.
+      if (node.port) node.port.postMessage('f');
       setTimeout(() => {
-        microphoneSource.disconnect();
-        recorderNode.disconnect();
-        microphoneStream.getTracks().forEach(track => track.stop());
-
-        // Join captured chunks into one sample array for drawing and playback.
-        sampleCount = audioChunks.reduce(
-          (total, chunk) => total + chunk.length,
-          0
-        );
-        originalSamples = displayedSamples = new Float32Array(sampleCount);
+        src.disconnect(); node.disconnect(); stream.getTracks().forEach(t => t.stop());
+        N = chunks.reduce((total, chunk) => total + chunk.length, 0);
+        raw = data = new Float32Array(N);
 
         let offset = 0;
-        for (const chunk of audioChunks) {
-          displayedSamples.set(chunk, offset);
+        for (const chunk of chunks) {
+          data.set(chunk, offset);
           offset += chunk.length;
         }
 
-        audioChunks = [];
-        sampleRate = audioContext.sampleRate;
-
-        // Peak amplitude is used to scale the waveform and the noise threshold.
-        peakAmplitude = 1e-6;
-        for (let index = 0; index < sampleCount; index++) {
-          const amplitude = Math.abs(displayedSamples[index]);
-          if (amplitude > peakAmplitude) {
-            peakAmplitude = amplitude;
-          }
+        chunks = [];
+        sr = ctx.sampleRate;
+        peak = 1e-6;
+        for (let i = 0; i < N; i++) {
+          const value = Math.abs(data[i]);
+          if (value > peak) peak = value;
         }
 
-        visibleStart = 0;
-        visibleLength = Math.max(sampleCount, 1);
-        mouseMarker = sampleCount * 0.25;
-        beepMarker = sampleCount * 0.75;
-        applyThreshold();
+        vs = 0;
+        vn = Math.max(N, 1);
+        A = N * .25;
+        B = N * .75;
+        autoGate();
+        applyThr();
+        hist = [];
+        future = [];
+        detect();
 
-        byId('res').style.display = 'block';
-        byId('rec').disabled = false;
-        byId('stat').textContent =
-          (sampleCount / sampleRate).toFixed(2) + ' s recorded';
-        drawGraph();
+        $('res').style.display = 'block';
+        $('rec').disabled = false;
+        $('stat').textContent = (N / sr).toFixed(2) + ' s recorded';
+        draw();
       }, 80);
     };
 
-    /* ---------- waveform drawing and graph controls ---------- */
-    function drawGraph() {
-      if (!displayedSamples) {
+    /* ---------- graph ---------- */
+    function draw() {
+      if (!data) return;
+      const scale = devicePixelRatio || 1;
+      const width = cv.clientWidth;
+      const height = cv.clientHeight;
+
+      if (cv.width !== Math.round(width * scale) || cv.height !== Math.round(height * scale)) {
+        cv.width = Math.round(width * scale);
+        cv.height = Math.round(height * scale);
+      }
+
+      g.setTransform(scale, 0, 0, scale, 0, 0);
+
+      const styles = getComputedStyle(document.documentElement);
+      const wave = styles.getPropertyValue('--wave');
+      const grid = styles.getPropertyValue('--grid');
+      const fg = styles.getPropertyValue('--fg');
+      g.clearRect(0, 0, width, height);
+
+      const samplesPerPixel = vn / width;
+      const amplitudeScale = (height / 2 - 1) / peak;
+      const sampleToY = sample => height / 2 - sample * amplitudeScale;
+
+      // Choose a "nice" time-axis interval that stays readable at each zoom level.
+      const millisecondsPerPixel = samplesPerPixel / sr * 1000;
+      const targetStep = millisecondsPerPixel * 90;
+      const power = 10 ** Math.floor(Math.log10(targetStep));
+      const step = [1, 2, 5, 10].find(multiplier => multiplier * power >= targetStep) * power;
+      const decimals = step < 1 ? Math.ceil(-Math.log10(step)) : 0;
+      const startMs = vs / sr * 1000;
+      const endMs = (vs + vn) / sr * 1000;
+      g.font = '11px system-ui';
+      g.textBaseline = 'bottom';
+      g.lineWidth = 1;
+
+      for (let tick = Math.ceil(startMs / step); tick * step <= endMs; tick++) {
+        const time = tick * step;
+        const x = Math.round((time * sr / 1000 - vs) / samplesPerPixel) + .5;
+        g.strokeStyle = grid;
+        g.beginPath();
+        g.moveTo(x, 0);
+        g.lineTo(x, height);
+        g.stroke();
+
+        g.fillStyle = fg;
+        g.globalAlpha = .6;
+        g.fillText(time.toFixed(decimals) + ' ms', x + 3, height - 2);
+        g.globalAlpha = 1;
+      }
+      g.strokeStyle = grid;
+      g.beginPath();
+      g.moveTo(0, height / 2);
+      g.lineTo(width, height / 2);
+      g.stroke();
+
+      // At wide zoom levels, draw each pixel's sample range as a vertical envelope.
+      g.strokeStyle = wave;
+      g.fillStyle = wave;
+      if (samplesPerPixel > 2) {
+        for (let x = 0; x < width; x++) {
+          const firstSample = Math.max(0, Math.floor(vs + x * samplesPerPixel));
+          const endSample = Math.min(N, Math.floor(vs + (x + 1) * samplesPerPixel));
+          if (endSample <= firstSample) continue;
+
+          let min = 1e9;
+          let max = -1e9;
+          for (let i = firstSample; i < endSample; i++) {
+            const value = data[i];
+            if (value < min) min = value;
+            if (value > max) max = value;
+          }
+          g.fillRect(x, sampleToY(max), 1, Math.max(1, sampleToY(min) - sampleToY(max)));
+        }
+      } else {
+        // At close zoom levels, draw the waveform sample by sample.
+        g.beginPath();
+        let firstPoint = true;
+        const endSample = Math.min(N - 1, Math.ceil(vs + vn));
+        for (let i = Math.max(0, Math.floor(vs) - 1); i <= endSample; i++) {
+          const x = (i - vs) / samplesPerPixel;
+          const y = sampleToY(data[i]);
+          if (firstPoint) g.moveTo(x, y);
+          else g.lineTo(x, y);
+          firstPoint = false;
+        }
+        g.stroke();
+        if (samplesPerPixel < .25) {
+          for (let i = Math.max(0, Math.floor(vs)); i <= endSample; i++) {
+            g.fillRect((i - vs) / samplesPerPixel - 2, sampleToY(data[i]) - 2, 4, 4);
+          }
+        }
+      }
+
+      // Overlay pointer-event markers, detected sounds, and the manual comparison bars.
+      g.textBaseline = 'top';
+      for (const m of withDelay()) {
+        const markerOffset = (parseFloat($('moff').value) || 0) / 1000;
+        const x = ((m.t + markerOffset) * sr - vs) / samplesPerPixel;
+        if (x < 0 || x > width) continue;
+
+        g.strokeStyle = g.fillStyle = m.c;
+        g.setLineDash([4, 3]);
+        g.beginPath();
+        g.moveTo(x, 0);
+        g.lineTo(x, height);
+        g.stroke();
+        g.setLineDash([]);
+        g.fillText(m.l, x + 3, 16);
+      }
+
+      drawDetections(samplesPerPixel, width, height);
+
+      const startX = (A - vs) / samplesPerPixel;
+      const endX = (B - vs) / samplesPerPixel;
+      g.fillStyle = '#f59e0b';
+      g.globalAlpha = mode === 'manual' ? .12 : 0;
+      g.fillRect(Math.min(startX, endX), 0, Math.abs(endX - startX), height);
+      g.globalAlpha = 1;
+      g.lineWidth = 2;
+      g.font = 'bold 11px system-ui';
+
+      (mode === 'manual'
+        ? [[startX, '#f59e0b', 'S'], [endX, '#ec4899', 'E']]
+        : []
+      ).forEach(([x, color, label]) => {
+        g.strokeStyle = g.fillStyle = color;
+        g.beginPath();
+        g.moveTo(x, 0);
+        g.lineTo(x, height);
+        g.stroke();
+        g.fillRect(x - 9, 0, 18, 14);
+        g.fillStyle = '#000';
+        g.fillText(label, x - 3, 2);
+      });
+      g.lineWidth = 1;
+
+      const elapsedMs = Math.abs(B - A) / sr * 1000;
+      const delayMs = num('dly', 0);
+      $('delta').textContent = delayMs
+        ? elapsedMs.toFixed(3) + ' − ' + delayMs + ' = ' + (elapsedMs - delayMs).toFixed(3) + ' ms'
+        : elapsedMs.toFixed(3) + ' ms';
+      $('info').textContent =
+        'S ' + (A / sr * 1000).toFixed(3) + ' ms · E ' + (B / sr * 1000).toFixed(3) +
+        ' ms · ' + sr + ' Hz · view ' + (vn / sr * 1000).toFixed(2) + ' ms';
+      th.style.left = vs / N * 100 + '%'; th.style.width = vn / N * 100 + '%';
+    }
+
+    // Keep the visible sample range inside the recording after zooming or panning.
+    const view = () => {
+      vn = clamp(vn, Math.min(20, N), N);
+      vs = clamp(vs, 0, N - vn);
+      draw();
+    };
+
+    function zoom(factor, relativePosition) {
+      const anchor = vs + relativePosition * vn;
+      vn = clamp(vn * factor, Math.min(20, N), N);
+      vs = anchor - relativePosition * vn;
+      view();
+    }
+
+    cv.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (!data) return;
+      zoom(e.deltaY < 0 ? .8 : 1.25, e.offsetX / cv.clientWidth);
+    }, { passive: false });
+
+    cv.addEventListener('pointerdown', e => {
+      const samplesPerPixel = vn / cv.clientWidth;
+      const x = e.offsetX;
+      cv.setPointerCapture(e.pointerId);
+      lastX = x;
+
+      const startDistance = Math.abs(x - (A - vs) / samplesPerPixel);
+      const endDistance = Math.abs(x - (B - vs) / samplesPerPixel);
+      if (mode === 'auto') {
+        evDrag = hitEvent(x, samplesPerPixel);
+        if (evDrag) {
+          snap();
+          return;
+        }
+      }
+
+      // In manual mode, grab a nearby comparison bar; otherwise drag to pan.
+      drag = mode === 'manual' && Math.min(startDistance, endDistance) < 10
+        ? (startDistance <= endDistance ? 'a' : 'b')
+        : 'pan';
+      if (drag === 'pan') cv.style.cursor = 'grabbing';
+    });
+
+    cv.addEventListener('pointermove', e => {
+      const samplesPerPixel = vn / cv.clientWidth;
+      const x = e.offsetX;
+
+      if (evDrag) {
+        moveEvent(x, samplesPerPixel);
         return;
       }
 
-      const pixelRatio = devicePixelRatio || 1;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-
-      // Scale the backing canvas for crisp rendering on high-density displays.
-      if (
-        canvas.width !== Math.round(width * pixelRatio) ||
-        canvas.height !== Math.round(height * pixelRatio)
-      ) {
-        canvas.width = Math.round(width * pixelRatio);
-        canvas.height = Math.round(height * pixelRatio);
-      }
-      canvasContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-
-      const styles = getComputedStyle(document.documentElement);
-      const waveColor = styles.getPropertyValue('--wave');
-      const gridColor = styles.getPropertyValue('--grid');
-      const textColor = styles.getPropertyValue('--fg');
-      canvasContext.clearRect(0, 0, width, height);
-
-      // Convert sample amplitudes to vertical positions in the graph.
-      const samplesPerPixel = visibleLength / width;
-      const amplitudeScale = (height / 2 - 1) / peakAmplitude;
-      const sampleToY = sample => height / 2 - sample * amplitudeScale;
-
-      // Choose readable time-axis tick spacing for the current zoom level.
-      const millisecondsPerPixel =
-        samplesPerPixel / sampleRate * 1000;
-      const targetTickSpacing = millisecondsPerPixel * 90;
-      const powerOfTen = 10 ** Math.floor(Math.log10(targetTickSpacing));
-      const tickStep =
-        [1, 2, 5, 10].find(multiplier =>
-          multiplier * powerOfTen >= targetTickSpacing
-        ) * powerOfTen;
-      const decimalPlaces =
-        tickStep < 1 ? Math.ceil(-Math.log10(tickStep)) : 0;
-      const visibleStartMs = visibleStart / sampleRate * 1000;
-      const visibleEndMs =
-        (visibleStart + visibleLength) / sampleRate * 1000;
-
-      canvasContext.font = '11px system-ui';
-      canvasContext.textBaseline = 'bottom';
-      canvasContext.lineWidth = 1;
-
-      for (
-        let tick = Math.ceil(visibleStartMs / tickStep);
-        tick * tickStep <= visibleEndMs;
-        tick++
-      ) {
-        const timeMs = tick * tickStep;
-        const x = Math.round(
-          (timeMs * sampleRate / 1000 - visibleStart) / samplesPerPixel
-        ) + 0.5;
-
-        canvasContext.strokeStyle = gridColor;
-        canvasContext.beginPath();
-        canvasContext.moveTo(x, 0);
-        canvasContext.lineTo(x, height);
-        canvasContext.stroke();
-
-        canvasContext.fillStyle = textColor;
-        canvasContext.globalAlpha = 0.6;
-        canvasContext.fillText(
-          timeMs.toFixed(decimalPlaces) + ' ms',
-          x + 3,
-          height - 2
-        );
-        canvasContext.globalAlpha = 1;
+      if (!drag) {
+        const nearEvent = mode === 'auto' && !!hitEvent(x, samplesPerPixel);
+        const nearBar = mode === 'manual' &&
+          Math.min(
+            Math.abs(x - (A - vs) / samplesPerPixel),
+            Math.abs(x - (B - vs) / samplesPerPixel)
+          ) < 10;
+        cv.style.cursor = nearEvent || nearBar ? 'ew-resize' : 'grab';
+        return;
       }
 
-      canvasContext.strokeStyle = gridColor;
-      canvasContext.beginPath();
-      canvasContext.moveTo(0, height / 2);
-      canvasContext.lineTo(width, height / 2);
-      canvasContext.stroke();
-
-      // At wide zoom levels, draw each pixel's min/max to preserve audio peaks.
-      canvasContext.strokeStyle = waveColor;
-      canvasContext.fillStyle = waveColor;
-      if (samplesPerPixel > 2) {
-        for (let x = 0; x < width; x++) {
-          const firstSample = Math.max(
-            0,
-            Math.floor(visibleStart + x * samplesPerPixel)
-          );
-          const endSample = Math.min(
-            sampleCount,
-            Math.floor(visibleStart + (x + 1) * samplesPerPixel)
-          );
-          if (endSample <= firstSample) {
-            continue;
-          }
-
-          let minSample = 1e9;
-          let maxSample = -1e9;
-          for (let index = firstSample; index < endSample; index++) {
-            const value = displayedSamples[index];
-            if (value < minSample) minSample = value;
-            if (value > maxSample) maxSample = value;
-          }
-
-          canvasContext.fillRect(
-            x,
-            sampleToY(maxSample),
-            1,
-            Math.max(1, sampleToY(minSample) - sampleToY(maxSample))
-          );
-        }
+      if (drag === 'pan') {
+        vs -= (x - lastX) * samplesPerPixel;
+        lastX = x;
+        view();
       } else {
-        // At close zoom levels, draw individual sample points as a line.
-        canvasContext.beginPath();
-        let isFirstPoint = true;
-        const endSample = Math.min(
-          sampleCount - 1,
-          Math.ceil(visibleStart + visibleLength)
-        );
+        const sample = clamp(vs + x * samplesPerPixel, 0, N);
+        if (drag === 'a') A = sample;
+        else B = sample;
+        draw();
+      }
+    });
 
-        for (
-          let index = Math.max(0, Math.floor(visibleStart) - 1);
-          index <= endSample;
-          index++
-        ) {
-          const x = (index - visibleStart) / samplesPerPixel;
-          const y = sampleToY(displayedSamples[index]);
+    const endDrag = () => {
+      drag = null;
+      if (evDrag) {
+        evDrag = null;
+        showTable();
+      }
+    };
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
 
-          if (isFirstPoint) {
-            canvasContext.moveTo(x, y);
-            isFirstPoint = false;
-          } else {
-            canvasContext.lineTo(x, y);
-          }
-        }
-        canvasContext.stroke();
+    $('zi').onclick = () => zoom(.5, .5);
+    $('zo').onclick = () => zoom(2, .5);
+    $('fit').onclick = () => {
+      vs = 0;
+      vn = N;
+      view();
+    };
 
-        // Show sample dots when zoomed in far enough to inspect individual samples.
-        if (samplesPerPixel < 0.25) {
-          for (
-            let index = Math.max(0, Math.floor(visibleStart));
-            index <= endSample;
-            index++
-          ) {
-            const x = (index - visibleStart) / samplesPerPixel;
-            canvasContext.fillRect(
-              x - 2,
-              sampleToY(displayedSamples[index]) - 2,
-              4,
-              4
-            );
-          }
-        }
+    // Apply the noise gate to the original recording, then refresh detection and the graph.
+    function applyThr() {
+      if (!raw) return;
+      const threshold = num('thr', 0) / 100 * peak;
+      data = threshold > 0
+        ? raw.map(value => value < threshold && value > -threshold ? 0 : value)
+        : raw;
+      refresh();
+    }
+    /* ---------- auto mode: detect clicks and beeps in the recording ---------- */
+
+    // Switch between the Auto and Manual tabs (CSS shows/hides the matching parts of the page)
+    function setMode(m) {
+      mode = m; document.body.dataset.mode = m;
+      $('tab-auto').setAttribute('aria-selected', m === 'auto');
+      $('tab-manual').setAttribute('aria-selected', m === 'manual');
+      refresh();
+    }
+
+    // Redraw the table and the graph (events only change through detect() and the edit tools below)
+    function refresh() {
+      showTable();
+      draw();
+    }
+
+    /* ----- undo / redo: every edit first stores a copy of the event list ----- */
+    const copy = () => JSON.stringify(events);
+    function snap() {
+      hist.push(copy());
+      future = [];
+    }
+
+    function undo() {
+      if (!hist.length) return;
+      future.push(copy());
+      events = JSON.parse(hist.pop());
+      refresh();
+    }
+
+    function redo() {
+      if (!future.length) return;
+      hist.push(copy());
+      events = JSON.parse(future.pop());
+      refresh();
+    }
+
+    // "Recalculate" button: keep an undo point, then run the auto detection again
+    function recalc() {
+      snap();
+      detect();
+    }
+
+    /* Auto detection. Events are {type:'click'|'beep', a:startSample}.
+       The beep length comes from "Duration (ms)" in Beep options, so the beep end is never detected:
+       1) Beeps: build a 1 ms envelope (mean |x| per ms) and average it over one beep length. That average is
+          only high where a steady block of that length starts, so short loud clicks do not match.
+          The block must also be "sustained" (most of its ms are loud) to count as a beep.
+       2) Clicks: before each beep, look back for the last loud short spike (above the click threshold).
+          That is the mouse-DOWN click. The mouse-up click comes after the beep, so it is never picked. */
+    function detect() {
+      events = [];
+      if (!data) {
+        refresh();
+        return;
       }
 
-      // Draw movement/click event markers recorded alongside the audio.
-      canvasContext.textBaseline = 'top';
-      const markerOffsetMs = parseFloat(byId('moff').value) || 0;
-      for (const marker of eventMarkers) {
-        const x =
-          ((marker.time + markerOffsetMs / 1000) * sampleRate - visibleStart) /
-          samplesPerPixel;
-        if (x < 0 || x > width) {
+      const samplesPerMs = Math.max(1, Math.round(sr / 1000));
+      const binCount = Math.floor(N / samplesPerMs);
+      const beepLengthMs = Math.max(1, Math.round(num('dur', 80)));
+      if (binCount < beepLengthMs + 2) {
+        refresh();
+        return;
+      }
+
+      // 1) envelope: mean absolute level of every millisecond
+      const envelope = new Float32Array(binCount);
+      for (let bin = 0; bin < binCount; bin++) {
+        let sum = 0;
+        for (let i = bin * samplesPerMs, end = i + samplesPerMs; i < end; i++) {
+          sum += Math.abs(data[i]);
+        }
+        envelope[bin] = sum / samplesPerMs;
+      }
+
+      // A prefix sum makes each D-bin average constant-time to calculate.
+      const prefix = new Float64Array(binCount + 1);
+      for (let bin = 0; bin < binCount; bin++) {
+        prefix[bin + 1] = prefix[bin] + envelope[bin];
+      }
+      const averageBlock = start => (prefix[start + beepLengthMs] - prefix[start]) / beepLengthMs;
+
+      let loudestBlock = 0;
+      for (let bin = 0; bin <= binCount - beepLengthMs; bin++) {
+        loudestBlock = Math.max(loudestBlock, averageBlock(bin));
+      }
+
+      // 2) beeps: walk through the recording, take blocks that are at least half as loud as the best one
+      const beeps = [];
+      for (let bin = 0; bin <= binCount - beepLengthMs;) {
+        if (averageBlock(bin) < loudestBlock * 0.5) {
+          bin++;
           continue;
         }
 
-        canvasContext.strokeStyle = marker.color;
-        canvasContext.fillStyle = marker.color;
-        canvasContext.setLineDash([4, 3]);
-        canvasContext.beginPath();
-        canvasContext.moveTo(x, 0);
-        canvasContext.lineTo(x, height);
-        canvasContext.stroke();
-        canvasContext.setLineDash([]);
-        canvasContext.fillText(marker.label, x + 3, 16);
+        // Search ahead by at most one beep duration to align with the strongest block.
+        let bestStart = bin;
+        for (let candidate = bin; candidate <= Math.min(binCount - beepLengthMs, bin + beepLengthMs); candidate++) {
+          if (averageBlock(candidate) > averageBlock(bestStart)) bestStart = candidate;
+        }
+
+        const level = averageBlock(bestStart);
+        let loudMs = 0;
+        for (let i = bestStart; i < bestStart + beepLengthMs; i++) {
+          if (envelope[i] >= level * 0.5) loudMs++;
+        }
+
+        if (loudMs >= beepLengthMs * 0.8) {
+          let firstLoudMs = bestStart;
+          while (
+            firstLoudMs > 0 &&
+            envelope[firstLoudMs - 1] >= level * 0.5 &&
+            bestStart - firstLoudMs < beepLengthMs
+          ) {
+            firstLoudMs--;
+          }
+
+          let sample = Math.max(0, (firstLoudMs - 1) * samplesPerMs);
+          const refinementEnd = (firstLoudMs + 1) * samplesPerMs;
+          while (sample < refinementEnd && Math.abs(data[sample]) < level * 0.8) sample++;
+          beeps.push(sample);
+        }
+
+        bin = bestStart + beepLengthMs;
       }
 
-      // Highlight the measured interval and draw the draggable M and B markers.
-      const mouseMarkerX = (mouseMarker - visibleStart) / samplesPerPixel;
-      const beepMarkerX = (beepMarker - visibleStart) / samplesPerPixel;
-      canvasContext.fillStyle = '#f59e0b';
-      canvasContext.globalAlpha = 0.12;
-      canvasContext.fillRect(
-        Math.min(mouseMarkerX, beepMarkerX),
-        0,
-        Math.abs(beepMarkerX - mouseMarkerX),
-        height
-      );
-      canvasContext.globalAlpha = 1;
-      canvasContext.lineWidth = 2;
-      canvasContext.font = 'bold 11px system-ui';
+      // 3) click before each beep: last spike above the click threshold in the time before it
+      const threshold = num('dthr', 15) / 100 * peak;
+      const quietThreshold = threshold * 0.5;
+      const spikeGap = Math.round(sr * 0.005);
+      let previousBeepEnd = 0;
 
-      for (const [x, color, label] of [
-        [mouseMarkerX, '#f59e0b', 'M'],
-        [beepMarkerX, '#ec4899', 'B']
-      ]) {
-        canvasContext.strokeStyle = color;
-        canvasContext.fillStyle = color;
-        canvasContext.beginPath();
-        canvasContext.moveTo(x, 0);
-        canvasContext.lineTo(x, height);
-        canvasContext.stroke();
-        canvasContext.fillRect(x - 9, 0, 18, 14);
-        canvasContext.fillStyle = '#000';
-        canvasContext.fillText(label, x - 3, 2);
+      for (const beepStart of beeps) {
+        const searchStart = Math.max(
+          previousBeepEnd,
+          beepStart - Math.round((num('dly', 0) + 1000) * sr / 1000)
+        );
+        const searchEnd = beepStart - samplesPerMs;
+        let spikeStart = -1;
+        let lastLoudSample = -1;
+
+        for (let sample = searchStart; sample < searchEnd; sample++) {
+          const value = Math.abs(data[sample]);
+          if (value < quietThreshold) continue;
+
+          if (spikeStart >= 0 && sample - lastLoudSample <= spikeGap) {
+            lastLoudSample = sample;
+            continue;
+          }
+          if (value < threshold) continue;
+
+          spikeStart = sample;
+          lastLoudSample = sample;
+        }
+
+        if (spikeStart >= 0) events.push({ type: 'click', a: spikeStart });
+        events.push({ type: 'beep', a: beepStart });
+        previousBeepEnd = beepStart + beepLengthMs * samplesPerMs;
       }
-      canvasContext.lineWidth = 1;
-
-      // Report the interval after subtracting any configured beep delay.
-      const elapsedMs =
-        Math.abs(beepMarker - mouseMarker) / sampleRate * 1000;
-      const beepDelayMs = getNonNegativeInput('dly', 0);
-      byId('delta').textContent = beepDelayMs
-        ? elapsedMs.toFixed(3) + ' − ' + beepDelayMs + ' = ' +
-          (elapsedMs - beepDelayMs).toFixed(3) + ' ms'
-        : elapsedMs.toFixed(3) + ' ms';
-
-      byId('info').textContent =
-        'M ' + (mouseMarker / sampleRate * 1000).toFixed(3) +
-        ' ms · B ' + (beepMarker / sampleRate * 1000).toFixed(3) +
-        ' ms · ' + sampleRate + ' Hz · view ' +
-        (visibleLength / sampleRate * 1000).toFixed(2) + ' ms';
-
-      // Reflect the visible portion of the recording in the scrollbar thumb.
-      scrollbarThumb.style.left = visibleStart / sampleCount * 100 + '%';
-      scrollbarThumb.style.width = visibleLength / sampleCount * 100 + '%';
+      refresh();
     }
 
-    // Keep the visible sample range inside the recording and redraw the graph.
-    const updateView = () => {
-      visibleLength = clamp(visibleLength, Math.min(20, sampleCount), sampleCount);
-      visibleStart = clamp(visibleStart, 0, sampleCount - visibleLength);
-      drawGraph();
-    };
+    /* Picks "Zero sound below (% of peak)" automatically, just above the static noise.
+       The recording is mostly quiet, so the 80th percentile of the per-millisecond peaks is the noise level;
+       the gate is set 1.5x above it (never above 25% of the peak, so clicks and beeps are never removed). */
+    function autoGate() {
+      const samplesPerMs = Math.max(1, Math.round(sr / 1000));
+      const binCount = Math.floor(N / samplesPerMs);
+      if (binCount < 10) return;
 
-    // Zoom around a relative point so the sample under the pointer stays put.
-    function zoomGraph(factor, anchorRatio) {
-      const anchorSample = visibleStart + anchorRatio * visibleLength;
-      visibleLength = clamp(
-        visibleLength * factor,
-        Math.min(20, sampleCount),
-        sampleCount
-      );
-      visibleStart = anchorSample - anchorRatio * visibleLength;
-      updateView();
+      const peaks = new Float32Array(binCount);
+      for (let bin = 0; bin < binCount; bin++) {
+        let max = 0;
+        for (let i = bin * samplesPerMs, end = i + samplesPerMs; i < end; i++) {
+          const value = Math.abs(raw[i]);
+          if (value > max) max = value;
+        }
+        peaks[bin] = max;
+      }
+
+      peaks.sort(); // Typed arrays sort numerically.
+      const noise = peaks[Math.floor(binCount * 0.8)];
+      $('thr').value = Math.min(25, Math.ceil(noise * 1.5 / peak * 1000) / 10);
     }
 
-    canvas.addEventListener('wheel', event => {
-      event.preventDefault();
-      if (!displayedSamples) {
-        return;
+    // Show click and scheduled-beep lines only when a delay is configured.
+    function withDelay() {
+      const delayMs = num('dly', 0);
+      if (delayMs === 0) return [];
+
+      const out = [];
+      for (const m of marks) {
+        out.push(m);
+        out.push({
+          t: m.t + delayMs / 1000,
+          c: '#0891b2',
+          l: 'delay'
+        });
       }
-
-      zoomGraph(
-        event.deltaY < 0 ? 0.8 : 1.25,
-        event.offsetX / canvas.clientWidth
-      );
-    }, { passive: false });
-
-    canvas.addEventListener('pointerdown', event => {
-      const samplesPerPixel = visibleLength / canvas.clientWidth;
-      const pointerX = event.offsetX;
-      canvas.setPointerCapture(event.pointerId);
-      previousPointerX = pointerX;
-
-      const distanceToMouseMarker = Math.abs(
-        pointerX - (mouseMarker - visibleStart) / samplesPerPixel
-      );
-      const distanceToBeepMarker = Math.abs(
-        pointerX - (beepMarker - visibleStart) / samplesPerPixel
-      );
-
-      // Grab a marker when nearby; otherwise pan the waveform.
-      activeDrag = Math.min(distanceToMouseMarker, distanceToBeepMarker) < 10
-        ? (distanceToMouseMarker <= distanceToBeepMarker ? 'mouse' : 'beep')
-        : 'pan';
-
-      if (activeDrag === 'pan') {
-        canvas.style.cursor = 'grabbing';
-      }
-    });
-
-    canvas.addEventListener('pointermove', event => {
-      const samplesPerPixel = visibleLength / canvas.clientWidth;
-      const pointerX = event.offsetX;
-
-      if (!activeDrag) {
-        const nearMarker = Math.min(
-          Math.abs(pointerX - (mouseMarker - visibleStart) / samplesPerPixel),
-          Math.abs(pointerX - (beepMarker - visibleStart) / samplesPerPixel)
-        ) < 10;
-        canvas.style.cursor = nearMarker ? 'ew-resize' : 'grab';
-        return;
-      }
-
-      if (activeDrag === 'pan') {
-        visibleStart -= (pointerX - previousPointerX) * samplesPerPixel;
-        previousPointerX = pointerX;
-        updateView();
-        return;
-      }
-
-      const markerSample = clamp(
-        visibleStart + pointerX * samplesPerPixel,
-        0,
-        sampleCount
-      );
-      if (activeDrag === 'mouse') {
-        mouseMarker = markerSample;
-      } else {
-        beepMarker = markerSample;
-      }
-      drawGraph();
-    });
-
-    const endGraphDrag = () => {
-      activeDrag = null;
-      canvas.style.cursor = 'grab';
-    };
-    canvas.addEventListener('pointerup', endGraphDrag);
-    canvas.addEventListener('pointercancel', endGraphDrag);
-
-    byId('zi').onclick = () => zoomGraph(0.5, 0.5);
-    byId('zo').onclick = () => zoomGraph(2, 0.5);
-    byId('fit').onclick = () => {
-      visibleStart = 0;
-      visibleLength = sampleCount;
-      updateView();
-    };
-
-    // Zero samples whose amplitude falls below the chosen percentage of the peak.
-    function applyThreshold() {
-      if (!originalSamples) {
-        return;
-      }
-
-      const threshold =
-        getNonNegativeInput('thr', 0) / 100 * peakAmplitude;
-      displayedSamples = threshold > 0
-        ? originalSamples.map(value =>
-          value < threshold && value > -threshold ? 0 : value
-        )
-        : originalSamples;
-      drawGraph();
+      return out;
     }
 
-    /* ---------- horizontal scrollbar ---------- */
-    let scrollbarPointerOffset = 0;
-    let isScrollbarDragging = false;
+    // End of a beep in samples: always start + the selected Duration (it is not detected)
+    const beepEnd = e => e.a + num('dur', 80) * sr / 1000;
 
-    const moveScrollbarToPointer = event => {
-      const bounds = scrollbar.getBoundingClientRect();
-      visibleStart =
-        (event.clientX - bounds.left - scrollbarPointerOffset) /
-        bounds.width * sampleCount;
-      updateView();
+    /* ----- edit tools (all store an undo point first) ----- */
+    function del(i) {
+      snap();
+      events.splice(i, 1);
+      refresh();
+    }
+
+    function addEvent(type) {
+      snap();
+      events.push({ type, a: vs + vn / 2 });
+      refresh();
+    }
+
+    function edit(i, field, value) {
+      if (field === 'type') {
+        snap();
+        events[i].type = value;
+        refresh();
+        return;
+      }
+
+      value = parseFloat(value);
+      if (isNaN(value) || value < 0) {
+        refresh();
+        return;
+      }
+
+      snap();
+      events[i].a = value * sr / 1000;
+      refresh();
+    }
+
+    // Table of all events with the delay between each click and the beep after it, and the average
+    function showTable() {
+      events.sort((p, q) => p.a - q.a);
+      let html = '';
+      let sum = 0;
+      let count = 0;
+      let min = Infinity;
+      let max = -Infinity;
+      let lastClick = null;
+
+      events.forEach((e, i) => {
+        const startMs = e.a / sr * 1000;
+        let delay = '';
+
+        if (e.type === 'click') lastClick = e;
+        else {
+          // Pair a beep with the preceding click only when it is within three seconds.
+          if (lastClick && startMs - lastClick.a / sr * 1000 < 3000) {
+            const measuredDelay = startMs - lastClick.a / sr * 1000 - num('dly', 0);
+            delay = measuredDelay.toFixed(2);
+            sum += measuredDelay;
+            count++;
+            min = Math.min(min, measuredDelay);
+            max = Math.max(max, measuredDelay);
+          }
+          lastClick = null;
+        }
+
+        html += `
+               <tr>
+                  <td>${i + 1}</td>
+                  <td>
+                     <select onchange="edit(${i}, 'type', this.value)">
+                        <option${e.type === 'click' ? ' selected' : ''}>click</option>
+                        <option${e.type === 'beep' ? ' selected' : ''}>beep</option>
+                     </select>
+                  </td>
+                  <td>
+                     <input type="number" step="any" value="${startMs.toFixed(2)}"
+                        onchange="edit(${i}, 'start', this.value)">
+                  </td>
+                  <td>${delay}</td>
+                  <td><button onclick="del(${i})" title="Remove">✕</button></td>
+               </tr>`;
+      });
+
+      $('rows').innerHTML = html ||
+        '<tr><td colspan="5">Nothing detected. Lower the click threshold, check the beep length, then press Recalculate.</td></tr>';
+      $('avg').innerHTML = count
+        ? `<tr><th colspan="3">Average of ${count} (min ${min.toFixed(2)}, max ${max.toFixed(2)})</th><th>${(sum / count).toFixed(2)} ms</th><th></th></tr>`
+        : '';
+      $('undo').disabled = !hist.length;
+      $('redo').disabled = !future.length;
+    }
+
+    /* ----- dragging events on the graph (only the start line can be dragged) ----- */
+    function hitEvent(x, spp) {
+      for (const e of events) {
+        if (Math.abs(x - (e.a - vs) / spp) < 8) return { e };
+      }
+      return null;
+    }
+
+    function moveEvent(x, spp) {
+      evDrag.e.a = clamp(vs + x * spp, 0, N);
+      draw();
+    }
+
+    // Draws detected clicks (red) and beeps (green) on the graph; called from draw()
+    function drawDetections(samplesPerPixel, width, height) {
+      if (mode !== 'auto') return;
+
+      g.save();
+      g.font = 'bold 11px system-ui';
+      g.textBaseline = 'top';
+      for (const e of events) {
+        const startX = (e.a - vs) / samplesPerPixel;
+        const endX = e.type === 'beep'
+          ? (beepEnd(e) - vs) / samplesPerPixel
+          : startX;
+        if (endX < 0 || startX > width) continue;
+
+        g.fillStyle = g.strokeStyle = e.type === 'beep' ? '#16a34a' : '#ef4444';
+        if (e.type === 'beep') {
+          g.globalAlpha = .15;
+          g.fillRect(startX, 0, Math.max(1, endX - startX), height);
+          g.globalAlpha = 1;
+          g.lineWidth = 1;
+          g.setLineDash([5, 4]);
+          g.beginPath();
+          g.moveTo(endX, 0);
+          g.lineTo(endX, height);
+          g.stroke();
+          g.setLineDash([]);
+        }
+
+        g.fillRect(startX, 0, 2, height);
+        g.fillText(e.type, startX + 4, 30);
+      }
+      g.restore();
+    }
+
+    // Drag the viewport handle, or click the track to center the viewport there.
+    let off = 0, sdrag = false;
+    const sbMove = e => {
+      const bounds = sb.getBoundingClientRect();
+      vs = (e.clientX - bounds.left - off) / bounds.width * N;
+      view();
     };
 
-    scrollbar.addEventListener('pointerdown', event => {
-      isScrollbarDragging = true;
-      scrollbar.setPointerCapture(event.pointerId);
-
-      const thumbBounds = scrollbarThumb.getBoundingClientRect();
-      scrollbarPointerOffset = event.target === scrollbarThumb
-        ? event.clientX - thumbBounds.left
-        : thumbBounds.width / 2;
-      moveScrollbarToPointer(event);
+    sb.addEventListener('pointerdown', e => {
+      sdrag = true;
+      sb.setPointerCapture(e.pointerId);
+      const thumbBounds = th.getBoundingClientRect();
+      off = e.target === th ? e.clientX - thumbBounds.left : thumbBounds.width / 2;
+      sbMove(e);
     });
-
-    scrollbar.addEventListener('pointermove', event => {
-      if (isScrollbarDragging) {
-        moveScrollbarToPointer(event);
-      }
+    sb.addEventListener('pointermove', e => {
+      if (sdrag) sbMove(e);
     });
-    scrollbar.addEventListener('pointerup', () => {
-      isScrollbarDragging = false;
-    });
+    sb.addEventListener('pointerup', () => sdrag = false);
+    new ResizeObserver(draw).observe(cv);
+    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', draw);
+    setMode('auto');
 
-    // Redraw on layout or system color-scheme changes.
-    new ResizeObserver(drawGraph).observe(canvas);
-    matchMedia('(prefers-color-scheme:dark)').addEventListener(
-      'change',
-      drawGraph
-    );
-
-    /* ---------- playback between markers ---------- */
-    byId('play').onclick = () => {
-      if (playbackSource) {
-        playbackSource.stop();
+    /* ---------- playback ---------- */
+    $('play').onclick = () => {
+      if (playing) {
+        playing.stop();
         return;
       }
 
-      const firstSample = Math.floor(Math.min(mouseMarker, beepMarker));
-      const endSample = Math.ceil(Math.max(mouseMarker, beepMarker));
-      if (endSample - firstSample < 2) {
-        return;
-      }
+      const startSample = Math.floor(Math.min(A, B));
+      const endSample = Math.ceil(Math.max(A, B));
+      if (endSample - startSample < 2) return;
 
-      const context = getAudioContext();
-      const buffer = context.createBuffer(
-        1,
-        endSample - firstSample,
-        sampleRate
-      );
-      buffer.copyToChannel(
-        displayedSamples.subarray(firstSample, endSample),
-        0
-      );
+      const buffer = ctx.createBuffer(1, endSample - startSample, sr);
+      buffer.copyToChannel(data.subarray(startSample, endSample), 0);
 
-      const source = context.createBufferSource();
+      const source = ctx.createBufferSource();
       source.buffer = buffer;
-      source.connect(context.destination);
+      source.connect(ctx.destination);
       source.onended = () => {
-        playbackSource = null;
-        byId('play').textContent = '▶ Play between bars';
+        playing = null;
+        $('play').textContent = '▶ Play between bars';
       };
 
-      playbackSource = source;
-      byId('play').textContent = '■ Stop playback';
-      context.resume();
+      playing = source;
+      $('play').textContent = '■ Stop playback';
+      ctx.resume();
       source.start();
     };
+    /* ---------- mouse-to-screen latency calculator ---------- */
+    function calculateFrameLatency() {
+      const speedText = $('frame-speed').value.trim();
+      const speedParts = speedText.split('/').map(part => Number(part.trim()));
+      const speed = speedParts.length === 2
+        ? speedParts[0] / speedParts[1]
+        : Number(speedText);
+      const frameRate = Number($('frame-rate').value);
+      const frameCount = Number($('frame-count').value);
+      const result = $('frame-result');
+
+      if (!Number.isFinite(speed) || speed <= 0 || !Number.isFinite(frameRate) || frameRate <= 0 ||
+        !Number.isFinite(frameCount) || frameCount < 0) {
+        result.textContent = 'Enter a positive speed and frame rate, and a non-negative frame count.';
+        return;
+      }
+
+      const latencyMs = (frameCount / frameRate) * speed * 1000;
+      result.textContent = latencyMs.toFixed(3) + ' ms';
+    }
+
+    $('frame-calculate').addEventListener('click', calculateFrameLatency);
+    ['frame-speed', 'frame-rate', 'frame-count'].forEach(id => {
+      $(id).addEventListener('input', calculateFrameLatency);
+    });
   </script>
 </body>
 
