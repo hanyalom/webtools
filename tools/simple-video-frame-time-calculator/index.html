@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6fb">
+  <meta name="description" content="A simple, step-by-step video frame calculator for estimating mouse-to-screen response time.">
+  <title>Simple Video Frame Time Calculator — Web Tools</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <link rel="stylesheet" href="../simple-system-latency-meter/wizard.css">
+  <link rel="stylesheet" href="calculator.css">
+  <script src="../../assets/tool-theme.js" defer></script>
+  <script src="calculator.js" defer></script>
+</head>
+<body class="guided-page">
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <div class="ambient ambient-three" aria-hidden="true"></div>
+  <header class="shell topbar guided-topbar">
+    <a class="brand" href="../../index.html" aria-label="Back to Web Tools">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z"/></svg>
+      </span>
+      Web Tools
+    </a>
+    <div class="guided-topbar-right">
+      <span class="guided-mode-label"><span class="status-dot"></span>Simple video calculator</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+        <span id="theme-label">Dark mode</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="guided-main calculator-main">
+    <div class="calculator-shell">
+      <div class="progress-header">
+        <div>
+          <p class="eyebrow">Mouse to screen · Video analysis</p>
+          <p class="step-count" id="calculator-status">Add your video to get started</p>
+        </div>
+        <div class="progress-track" aria-hidden="true"><span id="calculator-progress"></span></div>
+      </div>
+      <section class="calculator-card">
+        <div class="calculator-intro" id="calculator-intro">
+          <div class="step-icon" aria-hidden="true">▣</div>
+          <h1>Let’s find the frame where your screen responds.</h1>
+          <p class="step-description">Choose your slow-motion video. We’ll step through it together so you can mark when the mouse moves and when the screen changes.</p>
+          <label class="upload-box" id="upload-box" for="video-file">
+            <input id="video-file" type="file" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.wmv,.3gp">
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <strong>Choose your recording</strong>
+            <span>MP4, MOV, WebM and other common video formats</span>
+            <span class="button-primary upload-button">Browse videos</span>
+          </label>
+          <p class="privacy-note">Your video is opened locally in your browser. It is never uploaded.</p>
+          <p class="calculator-error" id="upload-error" role="alert" hidden></p>
+        </div>
+
+        <div class="video-workspace" id="video-workspace" hidden>
+          <div class="video-heading">
+            <div>
+              <p class="step-kicker">Your recording</p>
+              <h1 id="video-name">Video ready</h1>
+            </div>
+            <label class="fps-control">Recording frame rate
+              <span><input id="fps-input" type="number" min="0.1" step="any" value="30" inputmode="decimal"> fps</span>
+              <small class="metadata-status" id="metadata-status">&nbsp;</small>
+            </label>
+            <label class="fps-control slowmo-control">Slow-motion playback
+              <select id="slowmo-speed">
+                <option value="1">1 · Normal speed</option>
+                <option value="0.5">1/2 · 2× slow motion</option>
+                <option value="0.25">1/4 · 4× slow motion</option>
+                <option value="0.125">1/8 · 8× slow motion</option>
+                <option value="0.0625">1/16 · 16× slow motion</option>
+                <option value="0.03125">1/32 · 32× slow motion</option>
+                <option value="0.015625">1/64 · 64× slow motion</option>
+              </select>
+              <small class="metadata-status" id="slowmo-metadata-status">&nbsp;</small>
+            </label>
+          </div>
+          <p class="video-instructions">Set your camera’s recording frame rate and, if the video was saved in slow motion, its playback speed. Then mark the first frame where the mouse starts moving and the first frame where the screen responds.</p>
+          <video id="video-player" controls playsinline preload="metadata"></video>
+          <div class="frame-controls" role="group" aria-label="Frame-by-frame controls">
+            <button class="button-secondary" id="previous-frame" type="button" aria-label="Previous frame">← Previous frame</button>
+            <span class="frame-display">Frame <strong id="frame-number">0</strong> · <span id="time-display">0.000 s</span></span>
+            <button class="button-secondary" id="next-frame" type="button" aria-label="Next frame">Next frame →</button>
+          </div>
+          <label class="timeline-label" for="frame-slider">Move through the recording</label>
+          <input id="frame-slider" class="frame-slider" type="range" min="0" max="0" value="0" aria-label="Video frame">
+          <div class="marker-actions">
+            <button class="button-primary" id="set-move" type="button" disabled>Mark mouse movement</button>
+            <button class="button-primary screen-marker" id="set-screen" type="button" disabled>Mark screen response</button>
+            <button class="button-back reset-button" id="reset-markers" type="button" disabled>Clear marks</button>
+          </div>
+          <div class="marker-status" aria-live="polite">
+            <span id="move-status"><span class="marker-dot move-dot"></span>Mouse movement: not marked</span>
+            <span id="screen-status"><span class="marker-dot screen-dot"></span>Screen response: not marked</span>
+          </div>
+          <div class="measurement-result" id="measurement-result" hidden>
+            <span>Estimated mouse-to-screen response</span>
+            <strong><span id="latency-value">—</span><small>ms</small></strong>
+            <p>Estimate based on the marked video frames and frame rate.</p>
+          </div>
+          <p class="calculator-error" id="video-error" role="alert" hidden></p>
+          <div class="video-footer-actions">
+            <label class="button-secondary change-video" for="replace-video-file">Choose a different video</label>
+            <a class="advanced-link" href="../video-frame-time-calculator/index.html">Need more video controls? Try the full calculator <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+      </section>
+      <p class="guided-footer">A higher recording frame rate gives a more precise estimate. Videos stay on your device.</p>
+    </div>
+  </main>
+  <input id="replace-video-file" type="file" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.wmv,.3gp" hidden>
+</body>
+</html>

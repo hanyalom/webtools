@@ -375,6 +375,60 @@
       animation: rise-in .45s both;
     }
 
+    .guided-mode-callout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 0 0 14px;
+      padding: 17px 19px;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--wave) 36%, var(--line));
+      border-radius: 16px;
+      background:
+        radial-gradient(ellipse at 95% 0%, color-mix(in srgb, var(--wave) 23%, transparent), transparent 62%),
+        var(--panel);
+      box-shadow: var(--shadow);
+      animation: guided-callout-glow 10s ease-in-out infinite alternate;
+    }
+
+    .guided-mode-callout strong {
+      color: var(--wave);
+    }
+
+    .guided-mode-callout p {
+      margin: 5px 0 0;
+      color: var(--fg);
+      opacity: .8;
+    }
+
+    .guided-mode-callout a {
+      flex: 0 0 auto;
+      padding: 9px 13px;
+      border: 1px solid color-mix(in srgb, var(--wave) 40%, var(--line));
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--wave) 13%, var(--panel));
+      color: var(--wave);
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .2s ease, background .2s ease;
+    }
+
+    .guided-mode-callout a:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--wave) 20%, var(--panel));
+    }
+
+    @keyframes guided-callout-glow {
+      from {
+        background-position: 0% 50%;
+      }
+
+      to {
+        background-position: 100% 50%;
+      }
+    }
+
     .tool-intro summary {
       color: var(--fg);
       font-weight: 700;
@@ -414,6 +468,11 @@
       .tool-intro details {
         padding: 13px 14px;
       }
+
+      .guided-mode-callout {
+        align-items: flex-start;
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -422,12 +481,16 @@
   <header class="shell topbar">
     <a class="brand" href="../../index.html" aria-label="Back to Web Tools">
       <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z" />
+        </svg>
       </span>
       Web Tools
     </a>
     <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode">
-      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
       <span id="theme-label">Dark mode</span>
     </button>
   </header>
@@ -435,162 +498,179 @@
     <section class="hero tool-hero" aria-labelledby="page-title">
       <p class="eyebrow">Audio &amp; input</p>
       <h1 id="page-title">System Latency Meter</h1>
-      <p class="hero-copy">Measure mouse-to-sound response with your microphone, then inspect the recording and compare individual attempts. You can also estimate mouse-to-screen latency with high-speed video.</p>
+      <p class="hero-copy">Measure mouse-to-sound response with your microphone, then inspect the recording and compare
+        individual attempts. You can also estimate mouse-to-screen latency with high-speed video.</p>
     </section>
     <section class="tool-intro" aria-label="About this tool">
-  <details open>
-    <summary><b>What this tool does</b></summary>
-    <p>This tool can measure <b>Mouse to Sound latency.</b></p>
-    <p>Record mouse clicks sound and speaker beeps using the microphone to measure the time until the system responds.
-      Choose Auto to detect and average multiple attempts, or Manual to measure between two points on the sound graph.
-    </p>
-  </details>
-  <br>
-  <details close>
-    <summary><b>Extra functionality: Mouse to Screen latency</b></summary>
-    <p>Estimate mouse-to-screen latency from a high-speed or slow-motion video with the
-      <b>Video Frame Time Calculator</b>. It lets you upload the recording and mark the exact frames, so you do not
-      need to count frames or calculate the result manually here.</p>
-    <ol>
-      <li>Record with a high-speed camera or a phone's slow-motion mode, framing both the mouse and screen clearly.</li>
-      <li>Make a quick mouse movement, click, or tap that causes a visible screen response, then stop recording.</li>
-      <li>Open the calculator using the link or scan its QR code below. On the calculator page, upload or drag in your
-        video recording.</li>
-      <li>Check the detected video frame rate and set the slow-motion speed to match your recording (use <b>1</b> for
-        regular-speed video).</li>
-      <li>Step through the video frame by frame. At the first frame where the mouse moves, select <b>Set Move Event</b>;
-        at the first frame where the screen responds, select <b>Set Screen Change</b>. The calculator displays the
-        estimated latency in milliseconds.</li>
-    </ol>
-    <p class="sm">This is a video-based estimate; accuracy depends on the recording frame rate and how clearly both
-      events can be identified.</p>
-    <div class="video-calculator-link">
-      <div>
-        <p><b>Open the Video Frame Time Calculator</b></p>
-        <p><a href="https://hanyalom.github.io/webtools/tools/video-frame-time-calculator/" target="_blank"
-            rel="noopener noreferrer">https://hanyalom.github.io/webtools/tools/video-frame-time-calculator/</a></p>
-        <p class="sm">On a phone, scan the QR code to open the calculator there. Choose the video from the device
-          where it is saved.</p>
-      </div>
-      <img src="video-frame-time-calculator-qr.png" alt="QR code linking to the Video Frame Time Calculator">
-    </div>
-  </details>
+      <aside class="guided-mode-callout">
+        <div>
+          <strong>Want a simpler, step-by-step experience?</strong>
+          <p>Let us guide you through measuring system latency, one easy step at a time.</p>
+        </div>
+        <a href="../simple-system-latency-meter/index.html">Try the guided mode <span aria-hidden="true">→</span></a>
+      </aside>
+      <details open>
+        <summary><b>What this tool does</b></summary>
+        <p>This tool can measure <b>Mouse to Sound latency.</b></p>
+        <p>Record mouse clicks sound and speaker beeps using the microphone to measure the time until the system
+          responds.
+          Choose Auto to detect and average multiple attempts, or Manual to measure between two points on the sound
+          graph.
+        </p>
+      </details>
+      <br>
+      <details close>
+        <summary><b>Extra functionality: Mouse to Screen latency</b></summary>
+        <p>Estimate mouse-to-screen latency from a high-speed or slow-motion video with the
+          <b>Video Frame Time Calculator</b>. It lets you upload the recording and mark the exact frames, so you do not
+          need to count frames or calculate the result manually here.
+        </p>
+        <ol>
+          <li>Record with a high-speed camera or a phone's slow-motion mode, framing both the mouse and screen clearly.
+          </li>
+          <li>Make a quick mouse movement, click, or tap that causes a visible screen response, then stop recording.
+          </li>
+          <li>Open the calculator using the link or scan its QR code below. On the calculator page, upload or drag in
+            your
+            video recording.</li>
+          <li>Check the detected video frame rate and set the slow-motion speed to match your recording (use <b>1</b>
+            for
+            regular-speed video).</li>
+          <li>Step through the video frame by frame. At the first frame where the mouse moves, select <b>Set Move
+              Event</b>;
+            at the first frame where the screen responds, select <b>Set Screen Change</b>. The calculator displays the
+            estimated latency in milliseconds.</li>
+        </ol>
+        <p class="sm">This is a video-based estimate; accuracy depends on the recording frame rate and how clearly both
+          events can be identified.</p>
+        <div class="video-calculator-link">
+          <div>
+            <p><b>Open the Video Frame Time Calculator</b></p>
+            <p><a href="https://hanyalom.github.io/webtools/tools/video-frame-time-calculator/" target="_blank"
+                rel="noopener noreferrer">https://hanyalom.github.io/webtools/tools/video-frame-time-calculator/</a></p>
+            <p class="sm">On a phone, scan the QR code to open the calculator there. Choose the video from the device
+              where it is saved.</p>
+          </div>
+          <img src="video-frame-time-calculator-qr.png" alt="QR code linking to the Video Frame Time Calculator">
+        </div>
+      </details>
     </section>
     <section class="tool-content" aria-label="Latency measurement controls">
-  <h2>Select mode</h2>
-  <div class="tabs" role="tablist"><button class="tab" id="tab-auto" onclick="setMode('auto')">Auto</button><button
-      class="tab" id="tab-manual" onclick="setMode('manual')">Manual</button></div>
-  <div class="tabpanel">
-    <details open>
-      <summary><b>How to use it</b></summary>
-      <div class="how-to-layout">
-        <ol>
-          <li>Take your headset off and place its microphone as close as possible to the mouse button. The picture
-            shows the recommended setup.</li>
-          <li>Disable noise cancellation and similar audio processing in your microphone driver or software (for
-            example, SteelSeries GG) so the microphone can clearly pick up the mouse click.</li>
-          <li>Turn up your headset volume enough for the microphone to clearly pick up the beep.</li>
-          <li>Press <b>Start recording</b> and keep quiet.</li>
-          <li>Click the large test area and keep the mouse button <b><u>pressed until you hear the beep</u></b>, then
-            release.
-            Repeat 3 to 5 times for a better Auto result; Auto calculates the average latency.</li>
-          <li>Press <b>Stop recording</b> and the sound graph will be displayed.</li>
-          <li>Zoom in or out with the mouse wheel. Pan by dragging an empty area of the graph or using the
-            scrollbar.</li>
-        </ol>
-        <img class="setup-image" src="1.png" alt="Headset with its microphone positioned close to a mouse button">
+      <h2>Select mode</h2>
+      <div class="tabs" role="tablist"><button class="tab" id="tab-auto" onclick="setMode('auto')">Auto</button><button
+          class="tab" id="tab-manual" onclick="setMode('manual')">Manual</button></div>
+      <div class="tabpanel">
+        <details open>
+          <summary><b>How to use it</b></summary>
+          <div class="how-to-layout">
+            <ol>
+              <li>Take your headset off and place its microphone as close as possible to the mouse button. The picture
+                shows the recommended setup.</li>
+              <li>Disable noise cancellation and similar audio processing in your microphone driver or software (for
+                example, SteelSeries GG) so the microphone can clearly pick up the mouse click.</li>
+              <li>Turn up your headset volume enough for the microphone to clearly pick up the beep.</li>
+              <li>Press <b>Start recording</b> and keep quiet.</li>
+              <li>Click the large test area and keep the mouse button <b><u>pressed until you hear the beep, then
+                    release.</u></b>
+                Repeat 3 to 5 times for a better Auto result; Auto calculates the average latency.</li>
+              <li>Press <b>Stop recording</b> and the sound graph will be displayed.</li>
+              <li>Zoom in or out with the mouse wheel. Pan by dragging an empty area of the graph or using the
+                scrollbar.</li>
+            </ol>
+            <img class="setup-image" src="1.png" alt="Headset with its microphone positioned close to a mouse button">
+          </div>
+          <ol class="manual-only" start="8">
+            <li>Move the yellow <b>M</b> marker to the beginning of the <b>M</b>ouse click sound, then move the magenta
+              <b>B</b> marker to the beginning of the <b>B</b>eep sound. The measured latency appears below the graph.
+            </li>
+          </ol>
+          <ol class="auto-only" start="8">
+            <li>The tool auto detects clicks and beeps and calculates the average latency.</li>
+            <li>Make sure all clicks and beeps are correctly detected and at the beginning of the respective sounds.
+              Adjust each event by dragging its marker or editing its table entry; remove unwanted events or add missing
+              ones with the table controls.</li>
+          </ol>
+          <div class="advanced-note">Press <b>Recalculate</b> to run automatic detection again using the
+            current settings. <b>Undo</b> and <b>Redo</b> cover edits.
+          </div>
+          <div class="advanced-note">Advanced: If the beep is too short or long, adjust its duration in
+            <b>Beep options</b>.
+          </div>
+          <div class="advanced-note">Advanced: If the mouse-click sound is too close to the beep, add a
+            delay in <b>Beep options</b>. The tool subtracts this added delay from the displayed measurement.</div>
+          <div class="advanced-note">Advanced: If the graph is noisy, increase <b>Zero sound below (% of
+              peak)</b> in <b>Sound graph options</b> to remove low-level microphone noise.</div>
+          <div class="advanced-note auto-only">Auto mode sets <b>Zero sound below (% of peak)</b> automatically after
+            recording to silence low-level background noise. You can adjust it to remove more noise, or lower it if
+            quiet parts of the recording disappear.</div>
+          <div class="advanced-note auto-only"><b>Click threshold (% of peak)</b> sets how loud a brief sound must be
+            to count as a click. Raise it to ignore noise that is being mistaken for clicks; lower it if real clicks
+            are not detected. Press <b>Recalculate</b> after changing it.</div>
+        </details>
       </div>
-      <ol class="manual-only" start="8">
-        <li>Move the yellow <b>M</b> marker to the beginning of the <b>M</b>ouse click sound, then move the magenta
-          <b>B</b> marker to the beginning of the <b>B</b>eep sound. The measured latency appears below the graph.
-        </li>
-      </ol>
-      <ol class="auto-only" start="8">
-        <li>The tool auto detects clicks and beeps and calculates the average latency.</li>
-        <li>Make sure all clicks and beeps are correctly detected and at the beginning of the respective sounds.
-          Adjust each event by dragging its marker or editing its table entry; remove unwanted events or add missing
-          ones with the table controls.</li>
-      </ol>
-      <div class="advanced-note">Press <b>Recalculate</b> to run automatic detection again using the
-        current settings. <b>Undo</b> and <b>Redo</b> cover edits.
+      <div class="row"><button id="rec">● Start recording</button><button id="stop" disabled>■ Stop
+          recording</button><span id="stat">Idle</span></div>
+      <details id="adv">
+        <summary>Beep options</summary>
+        <div class="row">
+          <label>Frequency (Hz) <input id="freq" type="number" value="2500" min="20" max="20000"></label>
+          <label>Duration (ms) <input id="dur" type="number" value="80" min="1" oninput="refresh()"></label>
+          <label>Delay after click (ms) <input id="dly" type="number" value="0" min="0" step="any"
+              oninput="refresh()"></label>
+        </div>
+      </details>
+      <div id="box" data-s="red">Move · Click</div>
+      <div id="res">
+        <div class="row"><button id="zi">Zoom +</button><button id="zo">Zoom −</button><button id="fit">Fit
+            all</button><button id="play" class="manual-only">▶ Play between bars</button>
+          <span class="sm">Wheel = zoom · drag empty area = pan · drag S/E bars</span>
+        </div>
+        <details id="gopt">
+          <summary>Sound graph options</summary>
+          <div class="row">
+            <label>Shift [move, click] markers (ms) <input id="moff" type="number" value="0" step="any"
+                oninput="draw()"></label>
+            <label>Zero sound below (% of peak) <input id="thr" type="number" value="0" min="0" max="100" step="0.1"
+                oninput="applyThr()"></label>
+          </div>
+        </details>
+        <div id="wrap"><canvas id="cv"></canvas></div>
+        <div id="sb">
+          <div id="th"></div>
+        </div>
+        <div class="row manual-only"><span id="delta">0 ms</span><span class="sm" id="info"></span></div>
+        <!-- Auto mode: detection settings, edit tools and the list of detected clicks and beeps -->
+        <div class="auto-only">
+          <div class="row"><label>Click threshold (% of peak) <input id="dthr" type="number" value="15" min="1"
+                max="100"></label>
+            <button onclick="recalc()">↻ Recalculate</button>
+            <button id="undo" onclick="undo()">↶ Undo</button><button id="redo" onclick="redo()">↷ Redo</button>
+            <button onclick="addEvent('click')">+ Click</button><button onclick="addEvent('beep')">+ Beep</button>
+          </div>
+          <div class="sm">Red = click (mouse down) · green = beep start, dashed line = beep end (comes from Duration,
+            not
+            draggable). Drag a start line on the graph or edit the table. Remove a mouse-up click with ✕.</div>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Event</th>
+                <th>Start (ms)</th>
+                <th>Delay after click (ms)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+            <tfoot id="avg"></tfoot>
+          </table>
+        </div>
+        <div class="sm">Dashed lines (shown when Delay after click is above 0): purple = click (moment the page received
+          the mouse click) · teal = scheduled beep (click + the Delay set in Beep options).</div>
       </div>
-      <div class="advanced-note">Advanced: If the beep is too short or long, adjust its duration in
-        <b>Beep options</b>.
-      </div>
-      <div class="advanced-note">Advanced: If the mouse-click sound is too close to the beep, add a
-        delay in <b>Beep options</b>. The tool subtracts this added delay from the displayed measurement.</div>
-      <div class="advanced-note">Advanced: If the graph is noisy, increase <b>Zero sound below (% of
-          peak)</b> in <b>Sound graph options</b> to remove low-level microphone noise.</div>
-      <div class="advanced-note auto-only">Auto mode sets <b>Zero sound below (% of peak)</b> automatically after
-        recording to silence low-level background noise. You can adjust it to remove more noise, or lower it if
-        quiet parts of the recording disappear.</div>
-      <div class="advanced-note auto-only"><b>Click threshold (% of peak)</b> sets how loud a brief sound must be
-        to count as a click. Raise it to ignore noise that is being mistaken for clicks; lower it if real clicks
-        are not detected. Press <b>Recalculate</b> after changing it.</div>
-    </details>
-  </div>
-  <div class="row"><button id="rec">● Start recording</button><button id="stop" disabled>■ Stop recording</button><span
-      id="stat">Idle</span></div>
-  <details id="adv">
-    <summary>Beep options</summary>
-    <div class="row">
-      <label>Frequency (Hz) <input id="freq" type="number" value="2500" min="20" max="20000"></label>
-      <label>Duration (ms) <input id="dur" type="number" value="80" min="1" oninput="refresh()"></label>
-      <label>Delay after click (ms) <input id="dly" type="number" value="0" min="0" step="any"
-          oninput="refresh()"></label>
-    </div>
-  </details>
-  <div id="box" data-s="red">Move · Click</div>
-  <div id="res">
-    <div class="row"><button id="zi">Zoom +</button><button id="zo">Zoom −</button><button id="fit">Fit
-        all</button><button id="play" class="manual-only">▶ Play between bars</button>
-      <span class="sm">Wheel = zoom · drag empty area = pan · drag S/E bars</span>
-    </div>
-    <details id="gopt">
-      <summary>Sound graph options</summary>
-      <div class="row">
-        <label>Shift [move, click] markers (ms) <input id="moff" type="number" value="0" step="any"
-            oninput="draw()"></label>
-        <label>Zero sound below (% of peak) <input id="thr" type="number" value="0" min="0" max="100" step="0.1"
-            oninput="applyThr()"></label>
-      </div>
-    </details>
-    <div id="wrap"><canvas id="cv"></canvas></div>
-    <div id="sb">
-      <div id="th"></div>
-    </div>
-    <div class="row manual-only"><span id="delta">0 ms</span><span class="sm" id="info"></span></div>
-    <!-- Auto mode: detection settings, edit tools and the list of detected clicks and beeps -->
-    <div class="auto-only">
-      <div class="row"><label>Click threshold (% of peak) <input id="dthr" type="number" value="15" min="1"
-            max="100"></label>
-        <button onclick="recalc()">↻ Recalculate</button>
-        <button id="undo" onclick="undo()">↶ Undo</button><button id="redo" onclick="redo()">↷ Redo</button>
-        <button onclick="addEvent('click')">+ Click</button><button onclick="addEvent('beep')">+ Beep</button>
-      </div>
-      <div class="sm">Red = click (mouse down) · green = beep start, dashed line = beep end (comes from Duration, not
-        draggable). Drag a start line on the graph or edit the table. Remove a mouse-up click with ✕.</div>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Event</th>
-            <th>Start (ms)</th>
-            <th>Delay after click (ms)</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-        <tfoot id="avg"></tfoot>
-      </table>
-    </div>
-    <div class="sm">Dashed lines (shown when Delay after click is above 0): purple = click (moment the page received
-      the mouse click) · teal = scheduled beep (click + the Delay set in Beep options).</div>
-  </div>
-      </section>
-    </main>
-    <footer class="shell site-footer">Free, focused tools that run right in your browser.</footer>
-    <script>
+    </section>
+  </main>
+  <footer class="shell site-footer">Free, focused tools that run right in your browser.</footer>
+  <script>
     const $ = id => document.getElementById(id);
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6fb">
+  <meta name="description" content="A calm, step-by-step guide to measuring mouse-to-sound or mouse-to-screen system latency.">
+  <title>Simple System Latency Meter — Web Tools</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <link rel="stylesheet" href="wizard.css">
+  <script src="../../assets/tool-theme.js" defer></script>
+  <script src="wizard.js" defer></script>
+</head>
+<body class="guided-page">
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <div class="ambient ambient-three" aria-hidden="true"></div>
+  <header class="shell topbar guided-topbar">
+    <a class="brand" href="../../index.html" aria-label="Back to Web Tools">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z"/></svg>
+      </span>
+      Web Tools
+    </a>
+    <div class="guided-topbar-right">
+      <span class="guided-mode-label"><span class="status-dot"></span>Guided mode</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+        <span id="theme-label">Dark mode</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="guided-main">
+    <div class="wizard-shell">
+      <div class="progress-header">
+        <div>
+          <p class="eyebrow" id="step-eyebrow">A little guidance goes a long way</p>
+          <p class="step-count" id="step-count">Getting started</p>
+        </div>
+        <div class="progress-track" aria-label="Progress">
+          <span id="progress-fill"></span>
+        </div>
+      </div>
+
+      <div class="wizard-card" id="wizard-card" aria-live="polite">
+        <section class="wizard-step is-active" data-step="welcome" aria-labelledby="welcome-title">
+          <div class="step-icon" aria-hidden="true">✦</div>
+          <h1 id="welcome-title">Let’s measure your system’s response.</h1>
+          <p class="step-description">We’ll take it one small step at a time. Choose what you’d like to measure, follow a few simple instructions, and we’ll help you understand the result.</p>
+          <div class="welcome-note"><span aria-hidden="true">🔒</span> Your recordings stay on this device and are never uploaded.</div>
+          <div class="step-actions">
+            <span></span>
+            <button class="button-primary" type="button" data-next="choice">Let’s get started <span aria-hidden="true">→</span></button>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="choice" aria-labelledby="choice-title" hidden>
+          <p class="step-kicker">Choose your pace</p>
+          <h1 id="choice-title">How would you like to use the meter?</h1>
+          <p class="step-description">Both options measure the same thing. Pick whichever feels right for you.</p>
+          <div class="choice-grid">
+            <button class="choice-card gentle-choice" type="button" data-next="measure">
+              <span class="choice-icon" aria-hidden="true">✦</span>
+              <strong>Take it easy — guide me</strong>
+              <span>We’ll walk through the setup together, one step at a time.</span>
+              <span class="choice-link">Start guided mode <span aria-hidden="true">→</span></span>
+            </button>
+            <a class="choice-card advanced-choice" href="../system-latency-meter/index.html">
+              <span class="choice-icon" aria-hidden="true">⚙</span>
+              <strong>I’m comfortable with the full tool</strong>
+              <span>Open the advanced System Latency Meter with all of its controls.</span>
+              <span class="choice-link">Open advanced meter <span aria-hidden="true">↗</span></span>
+            </a>
+          </div>
+          <div class="step-actions"><button class="button-back" type="button" data-back>← Back</button><span></span></div>
+        </section>
+
+        <section class="wizard-step" data-step="measure" aria-labelledby="measure-title" hidden>
+          <p class="step-kicker">Step 1</p>
+          <h1 id="measure-title">What would you like to measure?</h1>
+          <p class="step-description">Choose the setup that works for you. You can always go back and change your mind.</p>
+          <div class="choice-grid measure-grid">
+            <button class="choice-card gentle-choice" type="button" data-next="audio-setup">
+              <span class="choice-icon" aria-hidden="true">♫</span>
+              <strong>Mouse to headphones</strong>
+              <span>Use your microphone to compare a mouse click with a beep. We’ll handle the timing automatically.</span>
+              <span class="choice-link">Automatic measurement <span aria-hidden="true">→</span></span>
+            </button>
+            <button class="choice-card gentle-choice" type="button" data-next="video-device">
+              <span class="choice-icon" aria-hidden="true">▣</span>
+              <strong>Mouse to screen</strong>
+              <span>Record the mouse and screen together in slow motion, then compare the frames.</span>
+              <span class="choice-link">Video measurement <span aria-hidden="true">→</span></span>
+            </button>
+          </div>
+          <div class="step-actions"><button class="button-back" type="button" data-back>← Back</button><span></span></div>
+        </section>
+
+        <section class="wizard-step" data-step="audio-setup" aria-labelledby="audio-setup-title" hidden>
+          <p class="step-kicker">Mouse to headphones · Setup</p>
+          <h1 id="audio-setup-title">Let’s get your microphone ready.</h1>
+          <div class="setup-layout">
+            <img src="../system-latency-meter/1.png" alt="A headset microphone positioned close to a mouse button">
+            <div>
+              <p>For the clearest result:</p>
+              <ul class="friendly-list">
+                <li>Place your microphone as close as possible to the mouse button.</li>
+                <li>Turn your headphone volume all the way up.</li>
+                <li>Find a quiet spot and keep still while we record.</li>
+              </ul>
+              <p class="privacy-note">Your browser will ask for microphone permission when you continue. Audio is processed only on this device.</p>
+            </div>
+          </div>
+          <p class="recording-error" id="recording-error" role="alert" hidden></p>
+          <div class="step-actions">
+            <button class="button-back" type="button" data-back>← Back</button>
+            <button class="button-primary" id="ready-button" type="button">I’m ready <span aria-hidden="true">→</span></button>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="audio-record" aria-labelledby="audio-record-title" hidden>
+          <p class="step-kicker">Mouse to headphones · Recording</p>
+          <h1 id="audio-record-title">Three gentle clicks. That’s all.</h1>
+          <p class="step-description">Press and keep holding the mouse button until you hear the beep. Then release it. We’ll move on after three clicks.</p>
+          <div class="recording-progress" id="recording-progress" aria-live="polite">Preparing your recording…</div>
+          <ol class="click-steps" id="click-steps">
+            <li class="is-current"><span class="step-check">1</span><span><strong>Press and hold</strong><small>Keep the mouse button down until you hear the beep.</small></span></li>
+            <li><span class="step-check">2</span><span><strong>Release</strong><small>Let go after you hear the beep.</small></span></li>
+            <li><span class="step-check">3</span><span><strong>Press and hold</strong><small>We’ll listen for one last beep.</small></span></li>
+            <li><span class="step-check">4</span><span><strong>Release</strong><small>You’re done after this one!</small></span></li>
+            <li><span class="step-check">5</span><span><strong>Press and hold</strong><small>Keep holding until you hear the final beep.</small></span></li>
+            <li><span class="step-check">6</span><span><strong>Release</strong><small>That’s all three clicks.</small></span></li>
+          </ol>
+          <button class="test-box" id="test-box" type="button" disabled>
+            <span class="test-box-symbol" aria-hidden="true">⌁</span>
+            <span id="test-box-label">Your click area will be ready in a moment</span>
+            <span class="test-box-hint">Press and hold here, then release after the beep</span>
+          </button>
+          <p class="recording-error" id="recording-error-live" role="alert" hidden></p>
+          <button class="button-secondary record-again-button" id="record-again-button" type="button" hidden>Record these steps again</button>
+          <div class="step-actions"><button class="button-back" type="button" data-back>← Back to setup</button><span></span></div>
+        </section>
+
+        <section class="wizard-step" data-step="audio-review" aria-labelledby="audio-review-title" hidden>
+          <p class="step-kicker">Mouse to headphones · Review</p>
+          <h1 id="audio-review-title">Can you hear the clicks and beeps?</h1>
+          <p class="step-description">Listen to the recording. If you can hear both the mouse clicks and the beeps, we’ll measure them for you.</p>
+          <div class="audio-card">
+            <canvas class="waveform" id="waveform" aria-label="Recorded audio waveform with detected click and beep markers"></canvas>
+            <audio id="recording-player" controls preload="metadata">Your browser does not support audio playback.</audio>
+            <p class="wave-legend"><span class="legend-click"></span>Mouse click <span class="legend-beep"></span>Beep</p>
+            <div class="noise-gate"><span>Auto noise reduction</span><span id="noise-gate-value">Calculating…</span></div>
+          </div>
+          <p class="recording-error" id="analysis-error" role="alert" hidden></p>
+          <div class="step-actions review-actions">
+            <button class="button-back" type="button" data-back>← Back</button>
+            <button class="button-secondary" id="retake-button" type="button">No, record again</button>
+            <button class="button-primary" id="analyze-button" type="button">Yes, I can hear them <span aria-hidden="true">→</span></button>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="audio-result" aria-labelledby="audio-result-title" hidden>
+          <p class="step-kicker">Mouse to headphones · Your result</p>
+          <h1 id="audio-result-title">Here’s your system’s response time.</h1>
+          <div class="result-card">
+            <span class="result-label">Average mouse-to-sound latency</span>
+            <strong class="result-value"><span id="latency-result">—</span><small>ms</small></strong>
+            <p id="result-caption">Measured across your three clicks.</p>
+          </div>
+          <div class="audio-card result-wave-card">
+            <canvas class="waveform" id="result-waveform" aria-label="Recording waveform with detected click and beep markers"></canvas>
+            <p class="wave-legend"><span class="legend-click"></span>Mouse click <span class="legend-beep"></span>Beep</p>
+          </div>
+          <details class="details-accordion">
+            <summary>Details</summary>
+            <div class="details-table-wrap">
+              <table class="details-table">
+                <thead><tr><th>Attempt</th><th>Mouse click</th><th>Beep</th><th>Latency</th></tr></thead>
+                <tbody id="result-rows"></tbody>
+              </table>
+            </div>
+          </details>
+          <div class="step-actions">
+            <button class="button-back" type="button" data-back>← Back</button>
+            <button class="button-primary" id="start-over-button" type="button">Start over</button>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="video-device" aria-labelledby="video-device-title" hidden>
+          <p class="step-kicker">Mouse to screen · Step 1</p>
+          <h1 id="video-device-title">What will you record with?</h1>
+          <p class="step-description">Choose a camera that can record slow-motion or high-frame-rate video.</p>
+          <div class="choice-grid">
+            <button class="choice-card gentle-choice" type="button" data-device="phone">
+              <span class="choice-icon" aria-hidden="true">▣</span>
+              <strong>A smartphone with slow motion</strong>
+              <span>Record with your phone, then open the calculator on it to analyze the video.</span>
+              <span class="choice-link">I’ll use my phone <span aria-hidden="true">→</span></span>
+            </button>
+            <button class="choice-card gentle-choice" type="button" data-device="camera">
+              <span class="choice-icon" aria-hidden="true">◎</span>
+              <strong>A high-speed camera</strong>
+              <span>Record a high-frame-rate video and import it to this device.</span>
+              <span class="choice-link">I’ll use a camera <span aria-hidden="true">→</span></span>
+            </button>
+          </div>
+          <div class="step-actions"><button class="button-back" type="button" data-back>← Back</button><span></span></div>
+        </section>
+
+        <section class="wizard-step" data-step="video-record" aria-labelledby="video-record-title" hidden>
+          <p class="step-kicker">Mouse to screen · Step 2</p>
+          <h1 id="video-record-title">Let’s make a clear recording.</h1>
+          <p class="step-description">Keep the mouse and screen in the same frame while recording. Move your mouse over the area below and click or move it.</p>
+          <div class="test-box video-test-box" id="video-test-box">
+            <span class="test-box-symbol" aria-hidden="true">⌁</span>
+            <span id="video-test-label">Put your mouse over this area and click / move while recording</span>
+            <span class="test-box-hint">Blue means movement · Green means a press · Red means ready</span>
+          </div>
+          <div class="step-actions">
+            <button class="button-back" type="button" data-back>← Back</button>
+            <button class="button-primary" id="video-done-button" type="button">Done recording <span aria-hidden="true">→</span></button>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="video-finish" aria-labelledby="video-finish-title" hidden>
+          <p class="step-kicker">Mouse to screen · Step 3</p>
+          <h1 id="video-finish-title">Your recording is ready to analyze.</h1>
+          <div class="phone-finish" id="phone-finish" hidden>
+            <p>Open the simple video calculator on your phone, then choose the recording you just made.</p>
+            <img class="calculator-qr" src="calculator-qr.svg" alt="QR code linking to the Simple Video Frame Time Calculator">
+            <p class="qr-caption">Scan this code with your phone</p>
+            <a class="button-primary link-button" href="../simple-video-frame-time-calculator/index.html" target="_blank" rel="noopener noreferrer">Open the calculator on your phone <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="camera-finish" id="camera-finish" hidden>
+            <p>Transfer your video to this device, then open the calculator and select it to begin.</p>
+            <a class="button-primary link-button" href="../simple-video-frame-time-calculator/index.html" target="_blank" rel="noopener noreferrer">Open the calculator in a new tab <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="step-actions"><button class="button-back" type="button" data-back>← Back</button><button class="button-primary" id="guided-home-button" type="button">Start over</button></div>
+        </section>
+      </div>
+      <p class="guided-footer">Your privacy matters. Recordings are processed locally in your browser.</p>
+    </div>
+  </main>
+</body>
+</html>

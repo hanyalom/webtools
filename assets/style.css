@@ -283,6 +283,29 @@ h1 {
   animation-delay: .08s;
 }
 
+.guided-tool-card {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background:
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 62%),
+    var(--surface-raised);
+  box-shadow: 0 16px 38px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.guided-tool-card::after {
+  background: color-mix(in srgb, var(--accent) 20%, var(--accent-soft));
+  animation: guided-glow 9s ease-in-out infinite alternate;
+}
+
+.guided-tool-card .category {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  color: var(--accent);
+}
+
+.guided-tool-card .tool-card-footer {
+  color: var(--accent);
+}
+
 .tool-card::after {
   position: absolute;
   right: -50px;
@@ -447,6 +470,11 @@ h1 {
   from {
     opacity: 0;
     transform: translateY(12px);
+  }
+
+  @keyframes guided-glow {
+    from { transform: translate(-8px, 8px) scale(.92); }
+    to { transform: translate(-40px, -16px) scale(1.2); }
   }
 
   to {
