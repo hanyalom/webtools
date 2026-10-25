@@ -1,21 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Web Tools</title>
-<link rel="stylesheet" href="assets/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6fb">
+  <meta name="description" content="A growing collection of free browser-based tools for measuring and understanding your devices.">
+  <title>Web Tools — Useful tools, right in your browser</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/app.js" defer></script>
 </head>
 <body>
-<header><h1>Web Tools</h1></header>
-<main>
-<!-- To add a tool: create tools/<name>/ with index.html and image.svg, then add a card below. -->
-<div class="grid">
-  <a class="card" href="tools/system-latency-meter/">
-    <!-- <img src="tools/latency-meter/image.svg" alt="System Latency Meter"> -->
-    <div><h2>System Latency Meter</h2><p>Measure your system's latency from mouse to headphones.</p></div>
-  </a>
-</div>
-</main>
+  <header class="shell topbar">
+    <a class="brand" href="./" aria-label="Web Tools home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z"/>
+        </svg>
+      </span>
+      Web Tools
+    </a>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <span id="theme-label">Dark mode</span>
+    </button>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Small tools, useful answers</p>
+      <h1 id="page-title">A little more clarity.<br>One tool at a time.</h1>
+      <p class="hero-copy">Simple, focused tools to help you measure system response and understand what’s happening between your input and your screen.</p>
+    </section>
+
+    <section class="library" aria-label="Tool library">
+      <div class="library-toolbar">
+        <p class="tool-count" aria-live="polite"><strong id="visible-count">2</strong> <span id="count-label">tools to explore</span></p>
+        <div class="toolbar-controls">
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/>
+            </svg>
+            <input id="tool-search" type="search" placeholder="Find a tool..." aria-label="Search tools">
+          </label>
+          <div class="view-switch" role="group" aria-label="Choose tool layout">
+            <button class="view-button" type="button" data-view-button="grid" aria-label="Grid view" aria-pressed="true" title="Grid view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>
+              </svg>
+              <span>Grid</span>
+            </button>
+            <button class="view-button" type="button" data-view-button="list" aria-label="List view" aria-pressed="false" title="List view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r=".7" fill="currentColor"/><circle cx="4" cy="12" r=".7" fill="currentColor"/><circle cx="4" cy="18" r=".7" fill="currentColor"/>
+              </svg>
+              <span>List</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-grid" id="tool-grid" data-view="grid">
+        <a class="tool-card" href="tools/system-latency-meter/index.html" data-search="system latency meter mouse sound audio input response" data-category="Audio &amp; input">
+          <div class="tool-card-top">
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12m0-12.72-2.12 2.12m-8.48 8.48-2.12 2.12"/>
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 9v3l2 1"/>
+              </svg>
+            </span>
+            <span class="category">Audio &amp; input</span>
+          </div>
+          <div class="tool-card-content">
+            <h2>System Latency Meter</h2>
+            <p>Measure mouse-to-sound response using your microphone, or estimate mouse-to-screen latency from a high-speed video. Compare results and inspect the timing visually.</p>
+          </div>
+          <span class="tool-card-footer">Explore tool
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </span>
+        </a>
+
+        <a class="tool-card" href="tools/video-frame-time-calculator/index.html" data-search="video frame time calculator latency mouse screen slow motion frames fps" data-category="Video analysis">
+          <div class="tool-card-top">
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3zM7 2v3m10-3v3M7 19v3m10-3v3"/>
+              </svg>
+            </span>
+            <span class="category">Video analysis</span>
+          </div>
+          <div class="tool-card-content">
+            <h2>Video Frame Time Calculator</h2>
+            <p>Step through a recording frame by frame, mark when an input happens and when the display responds, then calculate the elapsed time in milliseconds.</p>
+          </div>
+          <span class="tool-card-footer">Explore tool
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </span>
+        </a>
+      </div>
+      <p class="empty-state" id="empty-state" hidden>No tools match your search. Try a different word.</p>
+    </section>
+  </main>
+
+  <footer class="shell site-footer">Free, focused tools that run right in your browser.</footer>
 </body>
 </html>

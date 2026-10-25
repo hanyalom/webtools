@@ -1,0 +1,1953 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Video Frame Time Calculator</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --fg: #15181d;
+      --panel: #fff;
+      --line: #d5d9e0;
+      --wave: #1d4ed8;
+      --grid: #e3e6eb;
+      --m-color: #f59e0b;
+      --s-color: #ec4899;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #101216;
+        --fg: #e8eaee;
+        --panel: #181b21;
+        --line: #2c313a;
+        --wave: #6ea8ff;
+        --grid: #242830;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #101216;
+      --fg: #e8eaee;
+      --panel: #181b21;
+      --line: #2c313a;
+      --wave: #6ea8ff;
+      --grid: #242830;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: 16px;
+      max-width: 1100px;
+      margin-inline: auto;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 12px;
+    }
+
+    h2 {
+      font-size: 15px;
+      margin: 16px 0 4px;
+    }
+
+    p {
+      margin: 4px 0;
+    }
+
+    ol {
+      margin: 4px 0;
+      padding-left: 22px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .row-between {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    button {
+      font: inherit;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--fg);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    button:hover:not(:disabled) {
+      filter: brightness(0.96);
+    }
+
+    button:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .btn-primary {
+      background: var(--wave);
+      color: #fff;
+      border-color: var(--wave);
+    }
+
+    .btn-move {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: var(--m-color);
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    .btn-screen {
+      background: rgba(236, 72, 153, 0.15);
+      border-color: var(--s-color);
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 13px;
+      border-radius: 6px;
+    }
+
+    input,
+    select {
+      font: inherit;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--fg);
+    }
+
+    input[type="number"] {
+      width: 90px;
+    }
+
+    label {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    details {
+      margin: 8px 0;
+    }
+
+    summary {
+      cursor: pointer;
+      opacity: .85;
+    }
+
+    summary b {
+      font-size: 15px;
+    }
+
+    .advanced-note {
+      margin: 6px 0 6px 8px;
+      padding-left: 10px;
+      border-left: 2px solid var(--line);
+      opacity: .75;
+      font-size: .94em;
+    }
+
+    .sm {
+      opacity: .75;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+    }
+
+    /* Upload & Controls Panel */
+    .panel-box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 12px 0;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--line);
+      border-radius: 8px;
+      padding: 22px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--wave);
+      background: rgba(29, 78, 216, 0.08);
+    }
+
+    /* Help Banner */
+    #codec-help {
+      display: none;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+
+    /* Video Player Canvas Wrap */
+    #wrap {
+      width: 100%;
+      min-height: 320px;
+      height: 52vh;
+      max-height: 600px;
+      background: #000;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    #video-cv {
+      display: block;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #video-cv.grabbing {
+      cursor: grabbing;
+    }
+
+    .video-overlay-info {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+
+    .video-zoom-badge {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    /* Timeline Canvas */
+    #timeline-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    #cv {
+      width: 100%;
+      height: 110px;
+      display: block;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    #sb {
+      position: relative;
+      height: 16px;
+      background: var(--grid);
+      border-radius: 8px;
+      margin-top: 8px;
+      touch-action: none;
+    }
+
+    #th {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: var(--wave);
+      border-radius: 8px;
+      opacity: .8;
+      min-width: 14px;
+      cursor: grab;
+    }
+
+    /* Results */
+    #res-card {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    #delta {
+      font-size: 28px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--wave);
+    }
+
+    /* Side-by-side snapshots */
+    .snapshots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 14px 0 6px;
+    }
+
+    @media (max-width: 640px) {
+      .snapshots-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .snapshot-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--bg);
+    }
+
+    .snapshot-card.move-card {
+      border-color: var(--m-color);
+    }
+
+    .snapshot-card.screen-card {
+      border-color: var(--s-color);
+    }
+
+    .snapshot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .badge-move {
+      background: var(--m-color);
+    }
+
+    .badge-screen {
+      background: var(--s-color);
+      color: #fff;
+    }
+
+    .snapshot-preview-wrap {
+      width: 100%;
+      height: 150px;
+      background: #000;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .snapshot-preview-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .badge-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .badge-dot-move {
+      background: var(--m-color);
+    }
+
+    .badge-dot-screen {
+      background: var(--s-color);
+    }
+
+    .status-badge {
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--grid);
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Video Frame Time Calculator</h1>
+
+  <details open>
+    <summary><b>What this tool does</b></summary>
+    <p>This tool estimates the time between a visible mouse movement and the resulting visible change on a screen, using a
+      video recording that shows both.</p>
+    <p>Mark the frame where the mouse first moves and the frame where the screen first responds. The tool converts the
+      difference between those frames into milliseconds using the selected frame rate and slow-motion speed. This is a
+      video-based estimate, not a direct measurement of the computer's input-to-display latency; its precision is limited
+      by the recording's frame rate and by how clearly each event can be identified.</p>
+  </details>
+
+  <details>
+    <summary><b>How to use it</b></summary>
+    <ol>
+      <li>Record your test using a smartphone camera (regular or 120 / 240 fps slow motion) or high-speed camera, keeping both
+        the mouse and the screen in the frame.</li>
+      <li>Perform a fast mouse movement, click, or tap while watching the screen reaction.</li>
+      <li>Drop the video file into the upload box below, or click <b>Choose video file</b>.</li>
+      <li>The video's frame rate is <b>automatically extracted from the video file</b>. If needed, you can edit it directly.</li>
+      <li>Set the <b>Slow-motion speed</b> (default <b>1</b> for normal speed, or select <b>1/2, 1/4, 1/8, 1/16, 1/32, 1/64</b>
+        if your camera saved high-speed footage as slow motion).</li>
+      <li>Step frame by frame using the buttons or keyboard arrow keys (<code>←</code> and <code>→</code>) to find the exact frame
+        where the mouse moves. Click <b>📌 Set Move Event (Frame 1)</b>.</li>
+      <li>Step forward to find the exact frame where the screen responds. Click <b>📌 Set Screen Change (Frame 2)</b>.</li>
+      <li>The measured latency is calculated and displayed below in milliseconds.</li>
+    </ol>
+    <div class="advanced-note"><b>Shortcuts:</b> <code>←</code> / <code>→</code> = ±1 frame · <code>Shift + ←</code> / <code>Shift + →</code> = ±10 frames ·
+      <code>Space</code> = Play / Pause · <code>1</code> or <code>M</code> = Set Move · <code>2</code> or <code>S</code> = Set Screen Change.
+      Mouse wheel or 2-finger pinch zooms into video; drag with 1 finger/mouse to pan; double-tap to reset.
+    </div>
+  </details>
+
+  <!-- Video File Selection -->
+  <div class="panel-box">
+    <input type="file" id="video-file-input" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.wmv,.flv,.ts,.mts,.3gp" style="display: none;">
+    <div class="dropzone" id="dropzone">
+      <p style="font-weight: 600; margin: 0;">Drag and drop your video recording here, or click to browse</p>
+      <button type="button" class="btn-primary" id="btn-browse">📁 Choose video file</button>
+      <p class="sm" id="video-filename" style="margin: 0;">Supports MP4, MOV, WebM, MKV, AVI, and other video formats</p>
+    </div>
+
+    <!-- Codec / HEVC Help Message (Shown if browser lacks HEVC) -->
+    <div id="codec-help">
+      <b style="color: #ef4444; font-size: 15px;">⚠️ HEVC (H.265) Codec Notice:</b>
+      <p style="margin: 6px 0;">This video is encoded in HEVC/H.265 (standard for Samsung Galaxy slow-motion). To play it in your browser:</p>
+      <ul style="margin: 4px 0; padding-left: 20px; line-height: 1.6;">
+        <li><b>Restart Google Chrome or Microsoft Edge:</b> The official Microsoft HEVC Extension is now installed on your system. If Chrome or Edge was already running, close and reopen your browser so it recognizes the newly installed hardware decoder.</li>
+        <li><b>Do not use Firefox:</b> Firefox on Windows does not support HEVC hardware playback. Open this tool in Chrome or Edge.</li>
+        <li><b>Record future videos in standard H.264 (optional):</b> On your Galaxy phone, open Camera $\rightarrow$ Settings $\rightarrow$ <i>Advanced video options</i> $\rightarrow$ Turn OFF <i>"High efficiency videos (HEVC)"</i>.</li>
+      </ul>
+    </div>
+
+    <!-- Parameter Inputs -->
+    <div class="row-between" style="margin-top: 14px;">
+      <div class="row">
+        <label>
+          <b>Slow-motion speed:</b>
+          <select id="slowmo">
+            <option value="1" selected>1 (Normal speed)</option>
+            <option value="1/2">1/2 (2x slow-mo)</option>
+            <option value="1/4">1/4 (4x slow-mo)</option>
+            <option value="1/8">1/8 (8x slow-mo)</option>
+            <option value="1/16">1/16 (16x slow-mo)</option>
+            <option value="1/32">1/32 (32x slow-mo)</option>
+            <option value="1/64">1/64 (64x slow-mo)</option>
+          </select>
+        </label>
+
+        <label>
+          <b>Video frame rate (fps):</b>
+          <input id="fps" type="number" value="30" min="0.001" step="any">
+        </label>
+        <span id="fps-badge" class="status-badge">Default: 30 fps</span>
+
+        <div class="row" style="margin: 0; gap: 4px;">
+          <button type="button" class="btn-sm" onclick="setFps(24)">24</button>
+          <button type="button" class="btn-sm" onclick="setFps(30)">30</button>
+          <button type="button" class="btn-sm" onclick="setFps(60)">60</button>
+          <button type="button" class="btn-sm" onclick="setFps(120)">120</button>
+          <button type="button" class="btn-sm" onclick="setFps(240)">240</button>
+        </div>
+      </div>
+      <div class="sm" id="video-meta">No video loaded</div>
+    </div>
+  </div>
+
+  <!-- Hidden in-DOM video element for reliable hardware decoding and event dispatching -->
+  <video id="main-video" playsinline muted preload="auto" style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px;"></video>
+
+  <!-- Video Player and Canvas Area -->
+  <div id="player-container" style="display: none;">
+    <div class="row-between" style="margin-bottom: 6px;">
+      <div class="row" style="margin: 0;">
+        <button type="button" id="btn-first" title="First frame">|◀</button>
+        <button type="button" id="btn-step-back-10" title="Back 10 frames">◀◀ -10</button>
+        <button type="button" id="btn-step-back-1" title="Back 1 frame (Left Arrow)">◀ -1</button>
+        <button type="button" class="btn-primary" id="btn-play" title="Play / Pause (Space)">▶ Play</button>
+        <button type="button" id="btn-step-fwd-1" title="Forward 1 frame (Right Arrow)">+1 ▶</button>
+        <button type="button" id="btn-step-fwd-10" title="Forward 10 frames">+10 ▶▶</button>
+        <button type="button" id="btn-last" title="Last frame">▶|</button>
+        <button type="button" id="btn-play-between" title="Loop between Move and Screen Change">▶ Play between markers</button>
+      </div>
+
+      <div class="row" style="margin: 0;">
+        <label>Frame:
+          <input type="number" id="frame-input" value="0" min="0" step="1" style="width: 76px;">
+          / <span id="frame-total-display">0</span>
+        </label>
+        <span class="sm" id="time-display" style="min-width: 80px;">0.000 s</span>
+      </div>
+    </div>
+
+    <!-- Video Canvas with Pan/Zoom -->
+    <div id="wrap">
+      <canvas id="video-cv"></canvas>
+      <div class="video-overlay-info" id="video-overlay">Frame 0 · 0.000 s</div>
+      <div class="video-zoom-badge" id="video-zoom-badge">100%</div>
+    </div>
+
+    <div class="row-between" style="margin-top: 6px;">
+      <div class="row" style="margin: 0;">
+        <button type="button" class="btn-move" id="btn-set-move">📌 Set Move Event (Frame 1)</button>
+        <button type="button" class="btn-screen" id="btn-set-screen">📌 Set Screen Change (Frame 2)</button>
+        <button type="button" id="btn-reset-markers" class="btn-sm">↺ Reset markers</button>
+      </div>
+
+      <div class="row" style="margin: 0;">
+        <button type="button" class="btn-sm" id="btn-v-zoom-in">Zoom +</button>
+        <button type="button" class="btn-sm" id="btn-v-zoom-out">Zoom −</button>
+        <button type="button" class="btn-sm" id="btn-v-zoom-fit">Fit</button>
+        <button type="button" class="btn-sm" id="btn-v-zoom-100">100%</button>
+        <span class="sm">Wheel or pinch = zoom · drag = pan · double-tap/click = reset</span>
+      </div>
+    </div>
+
+    <!-- Timeline & Scrubber -->
+    <div id="timeline-wrap">
+      <canvas id="cv"></canvas>
+    </div>
+    <div id="sb">
+      <div id="th"></div>
+    </div>
+    <div class="row-between" style="margin-top: 4px;">
+      <div class="row" style="margin: 0;">
+        <button type="button" class="btn-sm" id="btn-t-zoom-in">Timeline Zoom +</button>
+        <button type="button" class="btn-sm" id="btn-t-zoom-out">Timeline Zoom −</button>
+        <button type="button" class="btn-sm" id="btn-t-fit">Fit all</button>
+      </div>
+      <span class="sm">Yellow marker = Move (M) · Pink marker = Screen Change (S) · Drag markers or click timeline to seek</span>
+    </div>
+
+    <!-- Calculated Result Panel -->
+    <div id="res-card">
+      <div class="row-between">
+        <div>
+          <span style="font-size: 14px; opacity: .8; display: block;">Measured Latency</span>
+          <span id="delta">0.000 ms</span>
+        </div>
+        <div style="text-align: right;">
+          <span class="sm" id="info">Set both Move Event and Screen Change frames to measure latency.</span>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Comparison of Selected Frames -->
+      <div class="snapshots-grid">
+        <div class="snapshot-card move-card">
+          <div class="snapshot-header">
+            <span><span class="badge badge-move">M</span> Frame 1: Mouse Move</span>
+            <span class="sm" id="m-frame-text">Not set</span>
+          </div>
+          <div class="snapshot-preview-wrap">
+            <canvas class="snapshot-preview-canvas" id="m-preview-cv" width="320" height="180"></canvas>
+          </div>
+          <div class="row" style="margin: 0; justify-content: space-between;">
+            <button type="button" class="btn-sm" id="btn-goto-m" disabled>Go to frame</button>
+            <div class="row" style="margin: 0; gap: 4px;">
+              <button type="button" class="btn-sm" id="btn-m-prev" disabled>◀ -1</button>
+              <button type="button" class="btn-sm" id="btn-m-next" disabled>+1 ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="snapshot-card screen-card">
+          <div class="snapshot-header">
+            <span><span class="badge badge-screen">S</span> Frame 2: Screen Change</span>
+            <span class="sm" id="s-frame-text">Not set</span>
+          </div>
+          <div class="snapshot-preview-wrap">
+            <canvas class="snapshot-preview-canvas" id="s-preview-cv" width="320" height="180"></canvas>
+          </div>
+          <div class="row" style="margin: 0; justify-content: space-between;">
+            <button type="button" class="btn-sm" id="btn-goto-s" disabled>Go to frame</button>
+            <div class="row" style="margin: 0; gap: 4px;">
+              <button type="button" class="btn-sm" id="btn-s-prev" disabled>◀ -1</button>
+              <button type="button" class="btn-sm" id="btn-s-next" disabled>+1 ▶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events Table -->
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Frame Number</th>
+            <th>Video Timestamp</th>
+            <th>Real Time</th>
+            <th>Difference</th>
+          </tr>
+        </thead>
+        <tbody id="events-tbody">
+          <tr>
+            <td><span class="badge-dot badge-dot-move"></span>Move Event (M)</td>
+            <td id="tbl-m-frame">—</td>
+            <td id="tbl-m-vtime">—</td>
+            <td id="tbl-m-rtime">—</td>
+            <td rowspan="2" id="tbl-diff" style="vertical-align: middle; font-weight: 700;">—</td>
+          </tr>
+          <tr>
+            <td><span class="badge-dot badge-dot-screen"></span>Screen Change (S)</td>
+            <td id="tbl-s-frame">—</td>
+            <td id="tbl-s-vtime">—</td>
+            <td id="tbl-s-rtime">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
+
+    // Convert the slow-motion selector's values (such as "1/8") to a number.
+    // Invalid or non-positive values fall back to normal speed.
+    function parseFraction(val) {
+      if (typeof val !== 'string') val = String(val);
+      val = val.trim();
+      const parts = val.split('/');
+      if (parts.length === 2) {
+        const num = parseFloat(parts[0]);
+        const den = parseFloat(parts[1]);
+        if (den !== 0 && !isNaN(num) && !isNaN(den)) return num / den;
+      }
+      const num = parseFloat(val);
+      return isNaN(num) || num <= 0 ? 1 : num;
+    }
+
+    // The hidden video element handles decoding; canvases display the video,
+    // timeline, and saved marker previews.
+    const video = $('main-video');
+    const dropzone = $('dropzone');
+    const fileInput = $('video-file-input');
+    const videoCv = $('video-cv');
+    const vg = videoCv.getContext('2d');
+    const cv = $('cv');
+    const tg = cv.getContext('2d');
+    const sb = $('sb');
+    const th = $('th');
+    const mPrevCv = $('m-preview-cv');
+    const mg = mPrevCv.getContext('2d');
+    const sPrevCv = $('s-preview-cv');
+    const sg = sPrevCv.getContext('2d');
+
+    // Frame indexes are zero-based. A null marker means the user has not set it.
+    let videoLoaded = false;
+    let videoDuration = 0;
+    let totalFrames = 0;
+    let currentFrame = 0;
+
+    let moveFrame = null;
+    let screenFrame = null;
+
+    let playing = false;
+    let playingBetween = false;
+    let animFrameId = null;
+
+    // Video viewer zoom and pan are stored separately from the video's frame state.
+    let vZoom = 1;
+    let vPanX = 0;
+    let vPanY = 0;
+    let vDragging = false;
+    let vLastX = 0;
+    let vLastY = 0;
+
+    // Timeline viewport (in frames)
+    let tVs = 0;
+    let tVn = 100;
+    let tDrag = null;
+
+    /* ---------- Native Video Metadata & FPS Extraction ---------- */
+
+    // Parse MP4 / MOV ISO BMFF container to extract exact video timescale, sample delta, and Samsung slowmo tags
+    async function extractMp4Details(file) {
+      try {
+        const fileSize = file.size;
+        let offset = 0;
+        let moovBuf = null;
+
+        // Traverse top-level boxes
+        while (offset + 8 <= fileSize) {
+          const headerBlob = file.slice(offset, offset + 16);
+          const headerBuf = await headerBlob.arrayBuffer();
+          if (headerBuf.byteLength < 8) break;
+
+          const view = new DataView(headerBuf);
+          let size = view.getUint32(0);
+          const type = String.fromCharCode(
+            view.getUint8(4), view.getUint8(5), view.getUint8(6), view.getUint8(7)
+          );
+
+          let headerSize = 8;
+          if (size === 1) {
+            if (headerBuf.byteLength < 16) break;
+            size = Number(view.getBigUint64(8));
+            headerSize = 16;
+          } else if (size === 0) {
+            size = fileSize - offset;
+          }
+
+          if (type === 'moov') {
+            const readSize = Math.min(size, 20 * 1024 * 1024);
+            const moovBlob = file.slice(offset, offset + readSize);
+            moovBuf = await moovBlob.arrayBuffer();
+            break;
+          }
+
+          if (size <= 0) break;
+          offset += size;
+        }
+
+        if (!moovBuf) {
+          // If moov was not found sequentially, scan the last 4MB
+          const tailSize = Math.min(fileSize, 4 * 1024 * 1024);
+          const tailBlob = file.slice(fileSize - tailSize, fileSize);
+          const tailBuf = await tailBlob.arrayBuffer();
+          const tailView = new DataView(tailBuf);
+          for (let i = 0; i < tailBuf.byteLength - 8; i++) {
+            if (tailView.getUint8(i + 4) === 109 && // 'm'
+                tailView.getUint8(i + 5) === 111 && // 'o'
+                tailView.getUint8(i + 6) === 111 && // 'o'
+                tailView.getUint8(i + 7) === 118) { // 'v'
+              moovBuf = tailBuf.slice(i);
+              break;
+            }
+          }
+        }
+
+        if (!moovBuf) return null;
+
+        const view = new DataView(moovBuf);
+        function getBoxes(start, end) {
+          const boxes = [];
+          let p = start;
+          while (p + 8 <= end) {
+            let sz = view.getUint32(p);
+            const tp = String.fromCharCode(view.getUint8(p+4), view.getUint8(p+5), view.getUint8(p+6), view.getUint8(p+7));
+            let hs = 8;
+            if (sz === 1) {
+              if (p + 16 > end) break;
+              sz = Number(view.getBigUint64(p + 8));
+              hs = 16;
+            } else if (sz === 0) {
+              sz = end - p;
+            }
+            if (sz < hs || p + sz > end) break;
+            boxes.push({ type: tp, start: p + hs, end: p + sz, size: sz });
+            p += sz;
+          }
+          return boxes;
+        }
+
+        const topBoxes = getBoxes(8, moovBuf.byteLength);
+        const traks = topBoxes.filter(b => b.type === 'trak');
+
+        for (const trak of traks) {
+          const trakChildren = getBoxes(trak.start, trak.end);
+          const mdia = trakChildren.find(b => b.type === 'mdia');
+          if (!mdia) continue;
+
+          const mdiaChildren = getBoxes(mdia.start, mdia.end);
+          const hdlr = mdiaChildren.find(b => b.type === 'hdlr');
+          if (!hdlr || hdlr.start + 12 > hdlr.end) continue;
+
+          // Check if video handler ('vide')
+          const handlerType = String.fromCharCode(
+            view.getUint8(hdlr.start + 8),
+            view.getUint8(hdlr.start + 9),
+            view.getUint8(hdlr.start + 10),
+            view.getUint8(hdlr.start + 11)
+          );
+          if (handlerType !== 'vide') continue;
+
+          // Get timescale from mdhd
+          const mdhd = mdiaChildren.find(b => b.type === 'mdhd');
+          if (!mdhd) continue;
+          const mdhdVer = view.getUint8(mdhd.start);
+          const timescale = mdhdVer === 1
+            ? view.getUint32(mdhd.start + 20)
+            : view.getUint32(mdhd.start + 12);
+
+          // Get stts & stsz from minf -> stbl
+          const minf = mdiaChildren.find(b => b.type === 'minf');
+          if (!minf) continue;
+          const minfChildren = getBoxes(minf.start, minf.end);
+          const stbl = minfChildren.find(b => b.type === 'stbl');
+          if (!stbl) continue;
+          const stblChildren = getBoxes(stbl.start, stbl.end);
+
+          const stts = stblChildren.find(b => b.type === 'stts');
+          const stsz = stblChildren.find(b => b.type === 'stsz');
+
+          let exactFrames = 0;
+          if (stsz && stsz.start + 8 <= stsz.end) {
+            exactFrames = view.getUint32(stsz.start + 8);
+          }
+
+          if (stts && stts.start + 8 <= stts.end && timescale > 0) {
+            const entryCount = view.getUint32(stts.start + 4);
+            const deltaFreq = {};
+            let totalCount = 0;
+            let totalDuration = 0;
+
+            for (let i = 0; i < entryCount && stts.start + 8 + (i + 1) * 8 <= stts.end; i++) {
+              const count = view.getUint32(stts.start + 8 + i * 8);
+              const delta = view.getUint32(stts.start + 8 + i * 8 + 4);
+              deltaFreq[delta] = (deltaFreq[delta] || 0) + count;
+              totalCount += count;
+              totalDuration += count * delta;
+            }
+
+            // Use the most common sample duration as the frame cadence. This
+            // avoids timestamp outliers (for example, an initial preroll frame).
+            let dominantDelta = 0;
+            let maxFreq = 0;
+            for (const [deltaStr, count] of Object.entries(deltaFreq)) {
+              const d = Number(deltaStr);
+              if (count > maxFreq) {
+                maxFreq = count;
+                dominantDelta = d;
+              }
+            }
+
+            let calculatedFps = 30;
+            if (dominantDelta > 0) {
+              calculatedFps = cleanFps(timescale / dominantDelta);
+            } else if (totalCount > 0 && totalDuration > 0) {
+              calculatedFps = cleanFps((totalCount * timescale) / totalDuration);
+            }
+
+            // Samsung slow-motion tags describe the capture-to-playback ratio,
+            // which is used by the latency calculation below.
+            let detectedSlowmo = null;
+            try {
+              const tailSize = Math.min(fileSize, 64 * 1024);
+              const tailBlob = file.slice(fileSize - tailSize, fileSize);
+              const tailBuf = await tailBlob.arrayBuffer();
+              const tailText = new TextDecoder().decode(tailBuf);
+              const speedMatch = tailText.match(/"SPEED"\s*:\s*(\d+)/i) || tailText.match(/SlowMotion_Data\d+:\d+:(\d+)/i);
+              if (speedMatch) {
+                const speedFactor = parseInt(speedMatch[1]);
+                if (speedFactor === 2) detectedSlowmo = '1/2';
+                else if (speedFactor === 4) detectedSlowmo = '1/4';
+                else if (speedFactor === 8) detectedSlowmo = '1/8';
+                else if (speedFactor === 16) detectedSlowmo = '1/16';
+                else if (speedFactor === 32) detectedSlowmo = '1/32';
+                else if (speedFactor === 64) detectedSlowmo = '1/64';
+              }
+            } catch (_) {}
+
+            return {
+              fps: calculatedFps,
+              totalFrames: exactFrames || totalCount,
+              timescale,
+              slowmo: detectedSlowmo
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('MP4 details parse warning:', err);
+      }
+      return null;
+    }
+
+    // WebM stores the default frame duration in nanoseconds; invert it to get fps.
+    async function extractWebmDetails(file) {
+      try {
+        const headerBlob = file.slice(0, Math.min(file.size, 2 * 1024 * 1024));
+        const buf = await headerBlob.arrayBuffer();
+        const u8 = new Uint8Array(buf);
+        for (let i = 0; i < u8.length - 8; i++) {
+          if (u8[i] === 0x23 && u8[i+1] === 0xE3 && u8[i+2] === 0x83) {
+            const len = u8[i+3] & 0x0F;
+            let ns = 0;
+            for (let j = 0; j < len; j++) {
+              ns = (ns * 256) + u8[i + 4 + j];
+            }
+            if (ns > 0) {
+              const fps = 1000000000 / ns;
+              if (fps >= 1 && fps <= 1000) {
+                return { fps: cleanFps(fps) };
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('WebM parse warning:', err);
+      }
+      return null;
+    }
+
+    function cleanFps(fps) {
+      if (Math.abs(fps - 29.97) < 0.05) return 29.97;
+      if (Math.abs(fps - 59.94) < 0.05) return 59.94;
+      if (Math.abs(fps - 23.976) < 0.05) return 23.976;
+      if (Math.abs(fps - Math.round(fps)) < 0.05) return Math.round(fps);
+      return Math.round(fps * 1000) / 1000;
+    }
+
+    function getFpsFromCaptureStream(videoEl) {
+      try {
+        if (typeof videoEl.captureStream === 'function') {
+          const stream = videoEl.captureStream();
+          const tracks = stream.getVideoTracks();
+          if (tracks.length > 0) {
+            const settings = tracks[0].getSettings();
+            if (settings && settings.frameRate && settings.frameRate > 0) {
+              return cleanFps(settings.frameRate);
+            }
+          }
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    /* ---------- FPS Inputs & Customization ---------- */
+    function setFps(val) {
+      $('fps').value = val;
+      $('fps-badge').textContent = `User set: ${val} fps`;
+      $('fps-badge').style.color = 'var(--fg)';
+      onFpsChange();
+    }
+
+    function onFpsChange() {
+      if (!videoLoaded) return;
+      const fps = parseFloat($('fps').value) || 30;
+      totalFrames = Math.max(1, Math.round(videoDuration * fps));
+      $('frame-total-display').textContent = totalFrames - 1;
+      $('frame-input').max = totalFrames - 1;
+      currentFrame = clamp(Math.round(video.currentTime * fps), 0, totalFrames - 1);
+      $('frame-input').value = currentFrame;
+      tVn = Math.min(tVn, totalFrames);
+      updateTimelineView();
+      calcLatency();
+    }
+
+    $('fps').addEventListener('input', () => {
+      const val = $('fps').value;
+      $('fps-badge').textContent = `User set: ${val} fps`;
+      $('fps-badge').style.color = 'var(--fg)';
+      onFpsChange();
+    });
+
+    $('slowmo').addEventListener('change', calcLatency);
+
+    /* ---------- File Selection & Video Loading ---------- */
+    $('btn-browse').onclick = e => {
+      e.stopPropagation();
+      fileInput.value = '';
+      fileInput.click();
+    };
+
+    dropzone.onclick = e => {
+      if (e.target !== $('btn-browse')) {
+        fileInput.value = '';
+        fileInput.click();
+      }
+    };
+
+    dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length) {
+        processSelectedFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length) {
+        processSelectedFile(fileInput.files[0]);
+      }
+    });
+
+    async function processSelectedFile(file) {
+      if (!file) return;
+
+      $('codec-help').style.display = 'none';
+      $('video-filename').textContent = `Loading ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)...`;
+      $('video-meta').textContent = 'Extracting video metadata and frame rate...';
+
+      // Read container metadata before loading the video so its frame rate and
+      // optional slow-motion ratio are ready when playback metadata arrives.
+      let detectedDetails = await extractMp4Details(file);
+      if (!detectedDetails) {
+        detectedDetails = await extractWebmDetails(file);
+      }
+
+      // Let the browser decode the selected file and dispatch its media events.
+      video.pause();
+      playing = false;
+      playingBetween = false;
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      updatePlayButton();
+
+      const blobUrl = URL.createObjectURL(file);
+      video.src = blobUrl;
+      video.load();
+
+      video._detectedDetails = detectedDetails;
+      video._fileName = file.name;
+    }
+
+    // Video error handling
+    video.addEventListener('error', () => {
+      const err = video.error;
+      let errMsg = 'Could not load video.';
+      let isHevc = false;
+      if (err) {
+        if (err.code === 4) {
+          errMsg = 'Video codec is not supported by current browser (e.g. HEVC/H.265).';
+          isHevc = true;
+        } else if (err.code === 3) errMsg = 'Video decode error.';
+        else if (err.code === 2) errMsg = 'Video file read error.';
+      }
+      $('video-meta').innerHTML = `<span style="color: #ef4444; font-weight: 600;">⚠️ ${errMsg}</span>`;
+      if (isHevc) {
+        $('codec-help').style.display = 'block';
+      }
+    });
+
+    // When video metadata is available
+    let initialized = false;
+    video.addEventListener('loadedmetadata', initVideoPlayer);
+    video.addEventListener('canplay', () => {
+      if (!initialized && video.videoWidth > 0) initVideoPlayer();
+    });
+
+    async function initVideoPlayer() {
+      if (initialized && videoDuration > 0 && video.videoWidth > 0) return;
+
+      videoLoaded = true;
+      initialized = true;
+
+      // Some formats report an unknown duration until the media is seeked.
+      videoDuration = video.duration;
+      if (!Number.isFinite(videoDuration) || videoDuration <= 0) {
+        video.currentTime = 1e7;
+        await new Promise(resolve => {
+          video.onseeked = () => {
+            videoDuration = video.duration || video.currentTime || 1;
+            video.currentTime = 0;
+            video.onseeked = null;
+            resolve();
+          };
+        });
+      }
+
+      // Prefer exact container metadata, then a captured-stream estimate, and
+      // finally the UI's normal-speed default.
+      let fps = 30;
+      let sourceTag = 'Default: 30 fps';
+
+      if (video._detectedDetails && video._detectedDetails.fps > 0) {
+        fps = video._detectedDetails.fps;
+        sourceTag = `Auto-detected from video details: ${fps} fps`;
+      } else {
+        const streamFps = getFpsFromCaptureStream(video);
+        if (streamFps && streamFps > 0) {
+          fps = streamFps;
+          sourceTag = `Auto-detected from stream: ${fps} fps`;
+        }
+      }
+
+      $('fps').value = fps;
+      $('fps-badge').textContent = sourceTag;
+      $('fps-badge').style.color = 'var(--wave)';
+
+      if (video._detectedDetails && video._detectedDetails.slowmo) {
+        $('slowmo').value = video._detectedDetails.slowmo;
+      }
+
+      // Container sample counts are more precise than duration × fps when
+      // available; otherwise estimate the count from the reported duration.
+      if (video._detectedDetails && video._detectedDetails.totalFrames > 0) {
+        totalFrames = video._detectedDetails.totalFrames;
+      } else {
+        totalFrames = Math.max(1, Math.round(videoDuration * fps));
+      }
+
+      $('video-filename').textContent = `${video._fileName || 'Video'} (${video.videoWidth}×${video.videoHeight})`;
+      $('video-meta').textContent = `${video.videoWidth}×${video.videoHeight} · ${videoDuration.toFixed(2)}s · ${fps} fps · ${totalFrames} frames`;
+      $('frame-total-display').textContent = totalFrames - 1;
+      $('frame-input').max = totalFrames - 1;
+
+      // Reset markers
+      moveFrame = null;
+      screenFrame = null;
+      currentFrame = 0;
+      resetPreviewCards();
+
+      tVs = 0;
+      tVn = totalFrames;
+
+      $('player-container').style.display = 'block';
+
+      requestAnimationFrame(() => {
+        fitVideoZoom();
+        seekToFrame(0);
+        calcLatency();
+        drawTimeline();
+      });
+    }
+
+    /* ---------- Video Canvas Rendering, Zoom & Pan ---------- */
+    function renderVideo() {
+      if (!videoLoaded || !video.videoWidth) return;
+
+      const wrap = $('wrap');
+      const wrapWidth = wrap.clientWidth || 800;
+      const wrapHeight = wrap.clientHeight || 450;
+
+      const scale = window.devicePixelRatio || 1;
+      videoCv.width = Math.round(wrapWidth * scale);
+      videoCv.height = Math.round(wrapHeight * scale);
+      videoCv.style.width = wrapWidth + 'px';
+      videoCv.style.height = wrapHeight + 'px';
+
+      vg.setTransform(scale, 0, 0, scale, 0, 0);
+      vg.fillStyle = '#000';
+      vg.fillRect(0, 0, wrapWidth, wrapHeight);
+
+      // Fit the source inside the canvas first, then apply the user's zoom and pan.
+      const videoRatio = video.videoWidth / video.videoHeight;
+      const wrapRatio = wrapWidth / wrapHeight;
+      let baseW, baseH;
+      if (videoRatio > wrapRatio) {
+        baseW = wrapWidth;
+        baseH = wrapWidth / videoRatio;
+      } else {
+        baseH = wrapHeight;
+        baseW = wrapHeight * videoRatio;
+      }
+
+      const drawW = baseW * vZoom;
+      const drawH = baseH * vZoom;
+      const drawX = (wrapWidth - drawW) / 2 + vPanX;
+      const drawY = (wrapHeight - drawH) / 2 + vPanY;
+
+      vg.drawImage(video, drawX, drawY, drawW, drawH);
+
+      $('video-zoom-badge').textContent = Math.round(vZoom * 100) + '%';
+      $('video-overlay').textContent = `Frame ${currentFrame} / ${totalFrames - 1} · ${video.currentTime.toFixed(3)} s`;
+    }
+
+    function fitVideoZoom() {
+      vZoom = 1;
+      vPanX = 0;
+      vPanY = 0;
+      renderVideo();
+    }
+
+    $('btn-v-zoom-in').onclick = () => {
+      vZoom = clamp(vZoom * 1.25, 0.25, 10);
+      renderVideo();
+    };
+    $('btn-v-zoom-out').onclick = () => {
+      vZoom = clamp(vZoom * 0.8, 0.25, 10);
+      renderVideo();
+    };
+    $('btn-v-zoom-fit').onclick = fitVideoZoom;
+    $('btn-v-zoom-100').onclick = () => {
+      vZoom = 1;
+      vPanX = 0;
+      vPanY = 0;
+      renderVideo();
+    };
+
+    videoCv.addEventListener('wheel', e => {
+      e.preventDefault();
+      const rect = videoCv.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - rect.width / 2;
+      const mouseY = e.clientY - rect.top - rect.height / 2;
+
+      const factor = e.deltaY < 0 ? 1.15 : 0.87;
+      const targetZoom = clamp(vZoom * factor, 0.25, 10);
+      const zoomRatio = targetZoom / vZoom;
+
+      vPanX = mouseX - (mouseX - vPanX) * zoomRatio;
+      vPanY = mouseY - (mouseY - vPanY) * zoomRatio;
+      vZoom = targetZoom;
+
+      renderVideo();
+    }, { passive: false });
+
+    /* ---------- Touch (Mobile) Pinch-to-Zoom & Pan ---------- */
+    let touchMode = 'none'; // 'none' | 'pan' | 'pinch'
+    let startDist = 0;
+    let startZoom = 1;
+    let touchStartMidX = 0;
+    let touchStartMidY = 0;
+    let touchStartPanX = 0;
+    let touchStartPanY = 0;
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let lastTapTime = 0;
+
+    function getTouchDist(t1, t2) {
+      return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+    }
+
+    function getTouchMidpoint(t1, t2, rect) {
+      return {
+        x: (t1.clientX + t2.clientX) / 2 - rect.left - rect.width / 2,
+        y: (t1.clientY + t2.clientY) / 2 - rect.top - rect.height / 2
+      };
+    }
+
+    videoCv.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        touchMode = 'pan';
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        touchMode = 'pinch';
+        const rect = videoCv.getBoundingClientRect();
+        startDist = getTouchDist(e.touches[0], e.touches[1]);
+        startZoom = vZoom;
+        const mid = getTouchMidpoint(e.touches[0], e.touches[1], rect);
+        touchStartMidX = mid.x;
+        touchStartMidY = mid.y;
+        touchStartPanX = vPanX;
+        touchStartPanY = vPanY;
+      }
+    }, { passive: false });
+
+    videoCv.addEventListener('touchmove', e => {
+      if (touchMode === 'none') return;
+      e.preventDefault(); // Prevent page scrolling during video canvas gestures
+
+      if (touchMode === 'pan' && e.touches.length === 1) {
+        const dx = e.touches[0].clientX - lastTouchX;
+        const dy = e.touches[0].clientY - lastTouchY;
+        vPanX += dx;
+        vPanY += dy;
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+        renderVideo();
+      } else if (e.touches.length === 2) {
+        touchMode = 'pinch';
+        const rect = videoCv.getBoundingClientRect();
+        const currentDist = getTouchDist(e.touches[0], e.touches[1]);
+        if (startDist > 0) {
+          const scale = currentDist / startDist;
+          const targetZoom = clamp(startZoom * scale, 0.25, 10);
+          const mid = getTouchMidpoint(e.touches[0], e.touches[1], rect);
+
+          const pX = (touchStartMidX - touchStartPanX) / startZoom;
+          const pY = (touchStartMidY - touchStartPanY) / startZoom;
+
+          vZoom = targetZoom;
+          vPanX = mid.x - pX * targetZoom;
+          vPanY = mid.y - pY * targetZoom;
+
+          renderVideo();
+        }
+      }
+    }, { passive: false });
+
+    videoCv.addEventListener('touchend', e => {
+      if (e.touches.length === 1) {
+        touchMode = 'pan';
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+      } else if (e.touches.length === 0) {
+        // Quick double tap to fit / reset zoom
+        const now = Date.now();
+        if (now - lastTapTime < 300) {
+          fitVideoZoom();
+        }
+        lastTapTime = now;
+        touchMode = 'none';
+      }
+    });
+
+    videoCv.addEventListener('touchcancel', () => {
+      touchMode = 'none';
+    });
+
+    /* ---------- Mouse (PC) Drag to Pan ---------- */
+    videoCv.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'touch') return; // Handled by touch listeners
+      vDragging = true;
+      videoCv.classList.add('grabbing');
+      videoCv.setPointerCapture(e.pointerId);
+      vLastX = e.clientX;
+      vLastY = e.clientY;
+    });
+
+    videoCv.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      if (!vDragging) return;
+      vPanX += e.clientX - vLastX;
+      vPanY += e.clientY - vLastY;
+      vLastX = e.clientX;
+      vLastY = e.clientY;
+      renderVideo();
+    });
+
+    const endVideoDrag = e => {
+      if (e && e.pointerType === 'touch') return;
+      vDragging = false;
+      videoCv.classList.remove('grabbing');
+    };
+    videoCv.addEventListener('pointerup', endVideoDrag);
+    videoCv.addEventListener('pointercancel', endVideoDrag);
+    videoCv.addEventListener('dblclick', fitVideoZoom);
+
+    /* ---------- Frame Navigation & Seeking ---------- */
+    function seekToFrame(frameIndex) {
+      if (!videoLoaded) return;
+      const fps = parseFloat($('fps').value) || 30;
+      currentFrame = clamp(frameIndex, 0, totalFrames - 1);
+      // Seek to the middle of the chosen frame so the browser decodes that
+      // frame rather than landing on the boundary with the previous frame.
+      const targetTime = clamp((currentFrame + 0.5) / fps, 0, videoDuration);
+      video.currentTime = targetTime;
+      updateFrameUI();
+      renderVideo();
+    }
+
+    function stepFrames(delta) {
+      if (playing) pause();
+      seekToFrame(currentFrame + delta);
+    }
+
+    $('btn-first').onclick = () => stepFrames(-Infinity);
+    $('btn-step-back-10').onclick = () => stepFrames(-10);
+    $('btn-step-back-1').onclick = () => stepFrames(-1);
+    $('btn-step-fwd-1').onclick = () => stepFrames(1);
+    $('btn-step-fwd-10').onclick = () => stepFrames(10);
+    $('btn-last').onclick = () => stepFrames(Infinity);
+
+    $('frame-input').addEventListener('change', e => {
+      seekToFrame(parseInt(e.target.value) || 0);
+    });
+
+    function updateFrameUI() {
+      $('frame-input').value = currentFrame;
+      $('time-display').textContent = video.currentTime.toFixed(3) + ' s';
+      drawTimeline();
+    }
+
+    video.addEventListener('seeked', () => {
+      const fps = parseFloat($('fps').value) || 30;
+      currentFrame = clamp(Math.floor(video.currentTime * fps), 0, totalFrames - 1);
+      renderVideo();
+      updateFrameUI();
+    });
+
+    /* ---------- Playback Loop ---------- */
+    function updatePlayButton() {
+      $('btn-play').textContent = playing ? '⏸ Pause' : '▶ Play';
+      $('btn-play-between').textContent = playingBetween ? '■ Stop playback' : '▶ Play between markers';
+    }
+
+    function play() {
+      if (!videoLoaded) return;
+      playing = true;
+      playingBetween = false;
+      updatePlayButton();
+      video.play();
+      animLoop();
+    }
+
+    function pause() {
+      playing = false;
+      playingBetween = false;
+      video.pause();
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      updatePlayButton();
+      renderVideo();
+      updateFrameUI();
+    }
+
+    $('btn-play').onclick = () => {
+      if (playing) pause();
+      else play();
+    };
+
+    $('btn-play-between').onclick = () => {
+      if (playingBetween) {
+        pause();
+        return;
+      }
+      if (moveFrame === null || screenFrame === null) {
+        alert('Please set both Move Event and Screen Change markers first.');
+        return;
+      }
+      const fps = parseFloat($('fps').value) || 30;
+      const startF = Math.min(moveFrame, screenFrame);
+      const endF = Math.max(moveFrame, screenFrame);
+      seekToFrame(startF);
+
+      playing = false;
+      playingBetween = true;
+      updatePlayButton();
+      video.play();
+      animLoop();
+    };
+
+    function animLoop() {
+      if (!playing && !playingBetween) return;
+
+      const fps = parseFloat($('fps').value) || 30;
+      currentFrame = clamp(Math.floor(video.currentTime * fps), 0, totalFrames - 1);
+
+      if (playingBetween) {
+        const startF = Math.min(moveFrame, screenFrame);
+        const endF = Math.max(moveFrame, screenFrame);
+        // Include the complete end frame before looping to the first marker.
+        const endTime = (endF + 1) / fps;
+        if (video.currentTime >= endTime || video.ended) {
+          seekToFrame(startF);
+          video.play();
+        }
+      }
+
+      renderVideo();
+      updateFrameUI();
+
+      if (!video.paused && !video.ended) {
+        animFrameId = requestAnimationFrame(animLoop);
+      } else if (video.ended) {
+        pause();
+      }
+    }
+
+    /* ---------- Keyboard Shortcuts ---------- */
+    window.addEventListener('keydown', e => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        stepFrames(e.shiftKey ? -10 : -1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        stepFrames(e.shiftKey ? 10 : 1);
+      } else if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        if (playing || playingBetween) pause();
+        else play();
+      } else if (e.key === '1' || e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        setMoveEvent();
+      } else if (e.key === '2' || e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        setScreenChange();
+      }
+    });
+
+    /* ---------- Event Markers (Move & Screen Change) ---------- */
+    $('btn-set-move').onclick = setMoveEvent;
+    $('btn-set-screen').onclick = setScreenChange;
+    $('btn-reset-markers').onclick = () => {
+      moveFrame = null;
+      screenFrame = null;
+      resetPreviewCards();
+      calcLatency();
+      drawTimeline();
+    };
+
+    function setMoveEvent() {
+      if (!videoLoaded) return;
+      moveFrame = currentFrame;
+      captureSnapshot(mPrevCv, mg);
+      updateMoveUI();
+      calcLatency();
+      drawTimeline();
+    }
+
+    function setScreenChange() {
+      if (!videoLoaded) return;
+      screenFrame = currentFrame;
+      captureSnapshot(sPrevCv, sg);
+      updateScreenUI();
+      calcLatency();
+      drawTimeline();
+    }
+
+    function captureSnapshot(targetCv, context) {
+      if (!video.videoWidth) return;
+      // Store the source frame at its native resolution; the preview canvas
+      // scales it to fit without losing detail in the saved image.
+      targetCv.width = video.videoWidth;
+      targetCv.height = video.videoHeight;
+      context.drawImage(video, 0, 0, targetCv.width, targetCv.height);
+    }
+
+    function updateMoveUI() {
+      if (moveFrame === null) {
+        $('m-frame-text').textContent = 'Not set';
+        $('btn-goto-m').disabled = true;
+        $('btn-m-prev').disabled = true;
+        $('btn-m-next').disabled = true;
+        return;
+      }
+      const fps = parseFloat($('fps').value) || 30;
+      const timeMs = (moveFrame / fps) * 1000;
+      $('m-frame-text').textContent = `Frame ${moveFrame} (${timeMs.toFixed(2)} ms)`;
+      $('btn-goto-m').disabled = false;
+      $('btn-m-prev').disabled = moveFrame <= 0;
+      $('btn-m-next').disabled = moveFrame >= totalFrames - 1;
+    }
+
+    function updateScreenUI() {
+      if (screenFrame === null) {
+        $('s-frame-text').textContent = 'Not set';
+        $('btn-goto-s').disabled = true;
+        $('btn-s-prev').disabled = true;
+        $('btn-s-next').disabled = true;
+        return;
+      }
+      const fps = parseFloat($('fps').value) || 30;
+      const timeMs = (screenFrame / fps) * 1000;
+      $('s-frame-text').textContent = `Frame ${screenFrame} (${timeMs.toFixed(2)} ms)`;
+      $('btn-goto-s').disabled = false;
+      $('btn-s-prev').disabled = screenFrame <= 0;
+      $('btn-s-next').disabled = screenFrame >= totalFrames - 1;
+    }
+
+    function resetPreviewCards() {
+      updateMoveUI();
+      updateScreenUI();
+      mg.fillStyle = '#000';
+      mg.fillRect(0, 0, mPrevCv.width, mPrevCv.height);
+      sg.fillStyle = '#000';
+      sg.fillRect(0, 0, sPrevCv.width, sPrevCv.height);
+    }
+
+    $('btn-goto-m').onclick = () => { if (moveFrame !== null) seekToFrame(moveFrame); };
+    $('btn-goto-s').onclick = () => { if (screenFrame !== null) seekToFrame(screenFrame); };
+
+    $('btn-m-prev').onclick = () => {
+      if (moveFrame !== null && moveFrame > 0) {
+        moveFrame--;
+        seekToFrame(moveFrame);
+        setMoveEvent();
+      }
+    };
+    $('btn-m-next').onclick = () => {
+      if (moveFrame !== null && moveFrame < totalFrames - 1) {
+        moveFrame++;
+        seekToFrame(moveFrame);
+        setMoveEvent();
+      }
+    };
+
+    $('btn-s-prev').onclick = () => {
+      if (screenFrame !== null && screenFrame > 0) {
+        screenFrame--;
+        seekToFrame(screenFrame);
+        setScreenChange();
+      }
+    };
+    $('btn-s-next').onclick = () => {
+      if (screenFrame !== null && screenFrame < totalFrames - 1) {
+        screenFrame++;
+        seekToFrame(screenFrame);
+        setScreenChange();
+      }
+    };
+
+    /* ---------- Latency Calculation & Results ---------- */
+    function calcLatency() {
+      const fps = parseFloat($('fps').value) || 30;
+      const slowmoStr = $('slowmo').value;
+      const slowmo = parseFraction(slowmoStr);
+
+      if (moveFrame === null || screenFrame === null) {
+        $('delta').textContent = '— ms';
+        $('info').textContent = 'Please set both Move Event and Screen Change frames to calculate latency.';
+        $('tbl-m-frame').textContent = moveFrame !== null ? moveFrame : '—';
+        $('tbl-m-vtime').textContent = moveFrame !== null ? (moveFrame / fps * 1000).toFixed(2) + ' ms' : '—';
+        $('tbl-m-rtime').textContent = moveFrame !== null ? (moveFrame / fps * 1000 * slowmo).toFixed(2) + ' ms' : '—';
+
+        $('tbl-s-frame').textContent = screenFrame !== null ? screenFrame : '—';
+        $('tbl-s-vtime').textContent = screenFrame !== null ? (screenFrame / fps * 1000).toFixed(2) + ' ms' : '—';
+        $('tbl-s-rtime').textContent = screenFrame !== null ? (screenFrame / fps * 1000 * slowmo).toFixed(2) + ' ms' : '—';
+
+        $('tbl-diff').textContent = '—';
+        return;
+      }
+
+      const diffFrames = Math.abs(screenFrame - moveFrame);
+      // Convert frame distance to recorded time, then apply the selected
+      // slow-motion ratio to express latency in real capture time.
+      const latencyMs = (diffFrames / fps) * slowmo * 1000;
+
+      $('delta').textContent = latencyMs.toFixed(3) + ' ms';
+      $('info').textContent =
+        `Move: Frame ${moveFrame} · Screen: Frame ${screenFrame} · ` +
+        `Diff: ${diffFrames} frames · ` +
+        `(${diffFrames} ÷ ${fps} fps) × ${slowmoStr} × 1000 = ${latencyMs.toFixed(3)} ms`;
+
+      // Update Table
+      $('tbl-m-frame').textContent = moveFrame;
+      $('tbl-m-vtime').textContent = (moveFrame / fps * 1000).toFixed(2) + ' ms';
+      $('tbl-m-rtime').textContent = (moveFrame / fps * 1000 * slowmo).toFixed(2) + ' ms';
+
+      $('tbl-s-frame').textContent = screenFrame;
+      $('tbl-s-vtime').textContent = (screenFrame / fps * 1000).toFixed(2) + ' ms';
+      $('tbl-s-rtime').textContent = (screenFrame / fps * 1000 * slowmo).toFixed(2) + ' ms';
+
+      $('tbl-diff').textContent = `${diffFrames} frames (${latencyMs.toFixed(3)} ms)`;
+    }
+
+    /* ---------- Timeline Canvas & Scrubber ---------- */
+    function updateTimelineView() {
+      // The viewport is measured in frames: start frame plus visible frame count.
+      tVn = clamp(tVn, 10, totalFrames);
+      tVs = clamp(tVs, 0, totalFrames - tVn);
+      drawTimeline();
+    }
+
+    function drawTimeline() {
+      if (!totalFrames) return;
+
+      const scale = window.devicePixelRatio || 1;
+      const width = cv.clientWidth || 800;
+      const height = cv.clientHeight || 110;
+
+      if (cv.width !== Math.round(width * scale) || cv.height !== Math.round(height * scale)) {
+        cv.width = Math.round(width * scale);
+        cv.height = Math.round(height * scale);
+      }
+
+      tg.setTransform(scale, 0, 0, scale, 0, 0);
+
+      const styles = getComputedStyle(document.documentElement);
+      const bg = styles.getPropertyValue('--panel');
+      const grid = styles.getPropertyValue('--grid');
+      const fg = styles.getPropertyValue('--fg');
+      const mColor = styles.getPropertyValue('--m-color').trim() || '#f59e0b';
+      const sColor = styles.getPropertyValue('--s-color').trim() || '#ec4899';
+
+      tg.fillStyle = bg;
+      tg.fillRect(0, 0, width, height);
+
+      const framesPerPixel = tVn / width;
+      const fps = parseFloat($('fps').value) || 30;
+
+      // Draw grid ticks
+      const targetFramesStep = framesPerPixel * 80;
+      const stepPower = 10 ** Math.floor(Math.log10(Math.max(1, targetFramesStep)));
+      const step = [1, 2, 5, 10].map(m => m * stepPower).find(s => s >= targetFramesStep) || stepPower * 10;
+
+      const firstTick = Math.ceil(tVs / step);
+      const lastTick = Math.floor((tVs + tVn) / step);
+
+      tg.lineWidth = 1;
+      tg.font = '11px system-ui';
+      tg.textBaseline = 'top';
+
+      for (let tick = firstTick; tick <= lastTick; tick++) {
+        const frame = tick * step;
+        const x = Math.round((frame - tVs) / framesPerPixel) + 0.5;
+
+        tg.strokeStyle = grid;
+        tg.beginPath();
+        tg.moveTo(x, 0);
+        tg.lineTo(x, height);
+        tg.stroke();
+
+        const timeSec = frame / fps;
+        tg.fillStyle = fg;
+        tg.globalAlpha = 0.6;
+        tg.fillText(`F${frame}`, x + 3, 4);
+        tg.fillText(`${timeSec.toFixed(2)}s`, x + 3, 18);
+        tg.globalAlpha = 1;
+      }
+
+      // Shaded range between Move and Screen Change
+      if (moveFrame !== null && screenFrame !== null) {
+        const startX = (Math.min(moveFrame, screenFrame) - tVs) / framesPerPixel;
+        const endX = (Math.max(moveFrame, screenFrame) - tVs) / framesPerPixel;
+
+        tg.fillStyle = mColor;
+        tg.globalAlpha = 0.15;
+        tg.fillRect(startX, 0, Math.max(2, endX - startX), height);
+        tg.globalAlpha = 1;
+      }
+
+      // Marker 1: Move Event
+      if (moveFrame !== null) {
+        const x = (moveFrame - tVs) / framesPerPixel;
+        if (x >= -20 && x <= width + 20) {
+          tg.strokeStyle = tg.fillStyle = mColor;
+          tg.lineWidth = 2;
+          tg.beginPath();
+          tg.moveTo(x, 0);
+          tg.lineTo(x, height);
+          tg.stroke();
+
+          tg.fillRect(x - 10, 34, 20, 16);
+          tg.fillStyle = '#000';
+          tg.font = 'bold 11px system-ui';
+          tg.textAlign = 'center';
+          tg.fillText('M', x, 36);
+          tg.textAlign = 'left';
+        }
+      }
+
+      // Marker 2: Screen Change
+      if (screenFrame !== null) {
+        const x = (screenFrame - tVs) / framesPerPixel;
+        if (x >= -20 && x <= width + 20) {
+          tg.strokeStyle = tg.fillStyle = sColor;
+          tg.lineWidth = 2;
+          tg.beginPath();
+          tg.moveTo(x, 0);
+          tg.lineTo(x, height);
+          tg.stroke();
+
+          tg.fillRect(x - 10, 52, 20, 16);
+          tg.fillStyle = '#fff';
+          tg.font = 'bold 11px system-ui';
+          tg.textAlign = 'center';
+          tg.fillText('S', x, 54);
+          tg.textAlign = 'left';
+        }
+      }
+
+      // Playhead (Current Frame)
+      const playheadX = (currentFrame - tVs) / framesPerPixel;
+      if (playheadX >= 0 && playheadX <= width) {
+        tg.strokeStyle = '#ef4444';
+        tg.fillStyle = '#ef4444';
+        tg.lineWidth = 2;
+        tg.beginPath();
+        tg.moveTo(playheadX, 0);
+        tg.lineTo(playheadX, height);
+        tg.stroke();
+
+        // Top handle
+        tg.beginPath();
+        tg.moveTo(playheadX - 6, 0);
+        tg.lineTo(playheadX + 6, 0);
+        tg.lineTo(playheadX, 8);
+        tg.closePath();
+        tg.fill();
+      }
+
+      // Update Scrollbar thumb
+      th.style.left = (tVs / totalFrames * 100) + '%';
+      th.style.width = Math.max(2, (tVn / totalFrames * 100)) + '%';
+    }
+
+    // Timeline Zoom & Pan
+    function zoomTimeline(factor, relativePos) {
+      // Keep the frame under the pointer (or the center for button zoom) fixed
+      // while changing the number of visible frames.
+      const anchor = tVs + relativePos * tVn;
+      tVn = clamp(tVn * factor, 10, totalFrames);
+      tVs = anchor - relativePos * tVn;
+      updateTimelineView();
+    }
+
+    $('btn-t-zoom-in').onclick = () => zoomTimeline(0.6, 0.5);
+    $('btn-t-zoom-out').onclick = () => zoomTimeline(1.6, 0.5);
+    $('btn-t-fit').onclick = () => {
+      tVs = 0;
+      tVn = totalFrames;
+      updateTimelineView();
+    };
+
+    cv.addEventListener('wheel', e => {
+      e.preventDefault();
+      const rect = cv.getBoundingClientRect();
+      const relX = (e.clientX - rect.left) / rect.width;
+      zoomTimeline(e.deltaY < 0 ? 0.8 : 1.25, relX);
+    }, { passive: false });
+
+    // Clicking seeks the playhead. Dragging close to either marker moves that
+    // marker instead; pointer capture keeps the drag active outside the canvas.
+    cv.addEventListener('pointerdown', e => {
+      const rect = cv.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const fpp = tVn / rect.width;
+      cv.setPointerCapture(e.pointerId);
+
+      const mX = moveFrame !== null ? (moveFrame - tVs) / fpp : -999;
+      const sX = screenFrame !== null ? (screenFrame - tVs) / fpp : -999;
+
+      if (Math.abs(x - mX) < 12) {
+        tDrag = 'm';
+      } else if (Math.abs(x - sX) < 12) {
+        tDrag = 's';
+      } else {
+        tDrag = 'playhead';
+        const targetF = clamp(Math.round(tVs + x * fpp), 0, totalFrames - 1);
+        seekToFrame(targetF);
+      }
+    });
+
+    cv.addEventListener('pointermove', e => {
+      const rect = cv.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const fpp = tVn / rect.width;
+
+      if (!tDrag) {
+        const mX = moveFrame !== null ? (moveFrame - tVs) / fpp : -999;
+        const sX = screenFrame !== null ? (screenFrame - tVs) / fpp : -999;
+        cv.style.cursor = (Math.abs(x - mX) < 12 || Math.abs(x - sX) < 12) ? 'ew-resize' : 'crosshair';
+        return;
+      }
+
+      const frame = clamp(Math.round(tVs + x * fpp), 0, totalFrames - 1);
+      if (tDrag === 'm') {
+        moveFrame = frame;
+        updateMoveUI();
+        calcLatency();
+        drawTimeline();
+      } else if (tDrag === 's') {
+        screenFrame = frame;
+        updateScreenUI();
+        calcLatency();
+        drawTimeline();
+      } else if (tDrag === 'playhead') {
+        seekToFrame(frame);
+      }
+    });
+
+    const endTimelineDrag = () => {
+      if (tDrag === 'm') {
+        seekToFrame(moveFrame);
+        setMoveEvent();
+      } else if (tDrag === 's') {
+        seekToFrame(screenFrame);
+        setScreenChange();
+      }
+      tDrag = null;
+    };
+    cv.addEventListener('pointerup', endTimelineDrag);
+    cv.addEventListener('pointercancel', endTimelineDrag);
+
+    // The scrollbar pans the visible timeline window without changing its zoom.
+    let sbDrag = false, sbOff = 0;
+    const moveSb = e => {
+      const bounds = sb.getBoundingClientRect();
+      tVs = ((e.clientX - bounds.left - sbOff) / bounds.width) * totalFrames;
+      updateTimelineView();
+    };
+
+    sb.addEventListener('pointerdown', e => {
+      sbDrag = true;
+      sb.setPointerCapture(e.pointerId);
+      const thBounds = th.getBoundingClientRect();
+      sbOff = e.target === th ? e.clientX - thBounds.left : thBounds.width / 2;
+      moveSb(e);
+    });
+
+    sb.addEventListener('pointermove', e => {
+      if (sbDrag) moveSb(e);
+    });
+    sb.addEventListener('pointerup', () => sbDrag = false);
+
+    // Resize handling for both wrap and timeline
+    const ro = new ResizeObserver(() => {
+      renderVideo();
+      drawTimeline();
+    });
+    ro.observe($('wrap'));
+    ro.observe($('timeline-wrap'));
+
+    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => {
+      renderVideo();
+      drawTimeline();
+    });
+  </script>
+</body>
+
+</html>

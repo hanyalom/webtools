@@ -305,9 +305,11 @@
       color: var(--fg)
     }
 
-    .frame-calculator {
+    .video-calculator-link {
       display: grid;
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 16px;
+      align-items: center;
       margin-top: 12px;
       padding: 16px;
       border: 1px solid var(--line);
@@ -315,54 +317,24 @@
       background: var(--bg)
     }
 
-    .frame-calculator label {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(120px, 220px);
-      gap: 16px;
-      align-items: center;
-      font-weight: 600
+    .video-calculator-link a {
+      font-weight: 600;
+      overflow-wrap: anywhere
     }
 
-    .frame-calculator input {
-      width: 100%;
-      min-height: 38px
-    }
-
-    .frame-calculator-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-top: 4px
-    }
-
-    .frame-calculator button {
-      min-height: 38px;
-      background: var(--wave);
-      color: #fff;
-      border-color: var(--wave)
-    }
-
-    #frame-result {
-      align-self: center;
-      font-size: 20px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums
-    }
-
-    #frame-speed-help {
-      display: block
+    .video-calculator-link img {
+      display: block;
+      width: 160px;
+      height: 160px;
+      padding: 6px;
+      justify-self: center;
+      background: #fff;
+      border-radius: 6px
     }
 
     @media (max-width: 480px) {
-      .frame-calculator label {
-        grid-template-columns: minmax(0, 1fr) minmax(90px, 120px);
-        gap: 8px;
-        font-size: 14px
-      }
-
-      .frame-calculator {
-        padding: 12px
+      .video-calculator-link {
+        grid-template-columns: 1fr
       }
     }
   </style>
@@ -380,34 +352,31 @@
   <br>
   <details close>
     <summary><b>Extra functionality: Mouse to Screen latency</b></summary>
-    <p>This tool can be used to measure Mouse to Screen latency.</p>
-    <p>Using a high-speed camera (or a phone with slow-motion video), you can visually measure the time between the
-      mouse moving and the screen response.</p>
+    <p>Estimate mouse-to-screen latency from a high-speed or slow-motion video with the
+      <b>Video Frame Time Calculator</b>. It lets you upload the recording and mark the exact frames, so you do not
+      need to count frames or calculate the result manually here.</p>
     <ol>
-      <li>Record the screen with the high-speed camera, you have to see the mouse and the screen in the same frame.</li>
-      <li>Start the video recording.</li>
-      <li>Put the mouse cursor on the test area of the screen.</li>
-      <li>Drop something on the mouse or push it fast.</li>
-      <li>Stop the video recording.</li>
-      <li>Analyze the video frame by frame counting the frames between the mouse movement and the screen response.</li>
-      <li>Calculate the latency by dividing the number of frames by the camera's frame rate.</li>
+      <li>Record with a high-speed camera or a phone's slow-motion mode, framing both the mouse and screen clearly.</li>
+      <li>Make a quick mouse movement, click, or tap that causes a visible screen response, then stop recording.</li>
+      <li>Open the calculator using the link or scan its QR code below. On the calculator page, upload or drag in your
+        video recording.</li>
+      <li>Check the detected video frame rate and set the slow-motion speed to match your recording (use <b>1</b> for
+        regular-speed video).</li>
+      <li>Step through the video frame by frame. At the first frame where the mouse moves, select <b>Set Move Event</b>;
+        at the first frame where the screen responds, select <b>Set Screen Change</b>. The calculator displays the
+        estimated latency in milliseconds.</li>
     </ol>
-    <div class="advanced-note">If the video is regular speed (not slow motion), enter <b>1</b> for
-      Slow-motion speed.
-    </div>
-    <div class="frame-calculator" aria-label="Mouse-to-screen latency calculator">
-      <label>Slow-motion speed (e.g. 1/8) <input id="frame-speed" type="text" value="1/8" inputmode="decimal"
-          aria-describedby="frame-speed-help"></label>
-      <label>Saved video frame rate (fps) <input id="frame-rate" type="number" value="30" min="0.001"
-          step="any"></label>
-      <label>Frames between movement and response <input id="frame-count" type="number" value="7" min="0"
-          step="any"></label>
-      <span class="sm" id="frame-speed-help">Latency (ms) = (frames ÷ saved fps) × slow-motion speed × 1000.
-        Enter 1 for regular-speed video; enter a fraction such as 1/8 for slow motion.</span>
-      <div class="frame-calculator-actions">
-        <output id="frame-result" aria-live="polite">29.167 ms</output>
-        <button id="frame-calculate" type="button">Calculate</button>
+    <p class="sm">This is a video-based estimate; accuracy depends on the recording frame rate and how clearly both
+      events can be identified.</p>
+    <div class="video-calculator-link">
+      <div>
+        <p><b>Open the Video Frame Time Calculator</b></p>
+        <p><a href="https://hanyalom.github.io/webtools/tools/video-frame-time-calculator/" target="_blank"
+            rel="noopener noreferrer">https://hanyalom.github.io/webtools/tools/video-frame-time-calculator/</a></p>
+        <p class="sm">On a phone, scan the QR code to open the calculator there. Choose the video from the device
+          where it is saved.</p>
       </div>
+      <img src="video-frame-time-calculator-qr.png" alt="QR code linking to the Video Frame Time Calculator">
     </div>
   </details>
   <br>
@@ -1376,31 +1345,6 @@
       ctx.resume();
       source.start();
     };
-    /* ---------- mouse-to-screen latency calculator ---------- */
-    function calculateFrameLatency() {
-      const speedText = $('frame-speed').value.trim();
-      const speedParts = speedText.split('/').map(part => Number(part.trim()));
-      const speed = speedParts.length === 2
-        ? speedParts[0] / speedParts[1]
-        : Number(speedText);
-      const frameRate = Number($('frame-rate').value);
-      const frameCount = Number($('frame-count').value);
-      const result = $('frame-result');
-
-      if (!Number.isFinite(speed) || speed <= 0 || !Number.isFinite(frameRate) || frameRate <= 0 ||
-        !Number.isFinite(frameCount) || frameCount < 0) {
-        result.textContent = 'Enter a positive speed and frame rate, and a non-negative frame count.';
-        return;
-      }
-
-      const latencyMs = (frameCount / frameRate) * speed * 1000;
-      result.textContent = latencyMs.toFixed(3) + ' ms';
-    }
-
-    $('frame-calculate').addEventListener('click', calculateFrameLatency);
-    ['frame-speed', 'frame-rate', 'frame-count'].forEach(id => {
-      $(id).addEventListener('input', calculateFrameLatency);
-    });
   </script>
 </body>
 
