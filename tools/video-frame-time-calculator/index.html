@@ -474,6 +474,55 @@
       max-width: 700px;
     }
 
+    .simple-calculator-callout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 0 0 14px;
+      padding: 17px 19px;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--wave) 36%, var(--line));
+      border-radius: 16px;
+      background:
+        radial-gradient(ellipse at 95% 0%, color-mix(in srgb, var(--wave) 23%, transparent), transparent 62%),
+        var(--panel);
+      box-shadow: var(--shadow);
+      animation: simple-calculator-glow 10s ease-in-out infinite alternate;
+    }
+
+    .simple-calculator-callout strong {
+      color: var(--wave);
+    }
+
+    .simple-calculator-callout p {
+      margin: 5px 0 0;
+      color: var(--fg);
+      opacity: .8;
+    }
+
+    .simple-calculator-callout a {
+      flex: 0 0 auto;
+      padding: 9px 13px;
+      border: 1px solid color-mix(in srgb, var(--wave) 40%, var(--line));
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--wave) 13%, var(--panel));
+      color: var(--wave);
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .2s ease, background .2s ease;
+    }
+
+    .simple-calculator-callout a:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--wave) 20%, var(--panel));
+    }
+
+    @keyframes simple-calculator-glow {
+      from { background-position: 0% 50%; }
+      to { background-position: 100% 50%; }
+    }
+
     .tool-guide {
       display: grid;
       grid-template-columns: 1fr;
@@ -536,6 +585,11 @@
       .tool-guide details {
         padding: 13px 14px;
       }
+
+      .simple-calculator-callout {
+        align-items: flex-start;
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -559,6 +613,13 @@
       <h1 id="page-title">Video Frame Time Calculator</h1>
       <p class="hero-copy">Use slow-motion or high-speed footage to compare the frame where an input happens with the frame where the display responds, and estimate the delay in milliseconds.</p>
     </section>
+    <aside class="simple-calculator-callout">
+      <div>
+        <strong>Prefer a simpler, step-by-step experience?</strong>
+        <p>Use the Simple Video Frame Time Calculator to mark your video frames with a little guidance.</p>
+      </div>
+      <a href="../simple-video-frame-time-calculator/index.html">Try the simple calculator <span aria-hidden="true">→</span></a>
+    </aside>
     <section class="tool-guide" aria-label="Tool instructions">
   <details open>
     <summary><b>What this tool does</b></summary>
