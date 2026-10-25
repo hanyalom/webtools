@@ -5,14 +5,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Video Frame Time Calculator</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+  <script src="../../assets/tool-theme.js" defer></script>
   <style>
     :root {
-      --bg: #f6f7f9;
-      --fg: #15181d;
+      color-scheme: light;
+      --bg: #f4f6fb;
+      --fg: #182230;
       --panel: #fff;
-      --line: #d5d9e0;
-      --wave: #1d4ed8;
-      --grid: #e3e6eb;
+      --line: #e2e7ef;
+      --wave: #5b5ce2;
+      --grid: #e2e7ef;
       --m-color: #f59e0b;
       --s-color: #ec4899;
       box-sizing: border-box;
@@ -22,22 +25,24 @@
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --bg: #101216;
-        --fg: #e8eaee;
-        --panel: #181b21;
-        --line: #2c313a;
-        --wave: #6ea8ff;
-        --grid: #242830;
+        color-scheme: dark;
+        --bg: #11151d;
+        --fg: #f0f3fa;
+        --panel: #202735;
+        --line: #303949;
+        --wave: #a1a2ff;
+        --grid: #303949;
       }
     }
 
     :root[data-theme="dark"] {
-      --bg: #101216;
-      --fg: #e8eaee;
-      --panel: #181b21;
-      --line: #2c313a;
-      --wave: #6ea8ff;
-      --grid: #242830;
+      color-scheme: dark;
+      --bg: #11151d;
+      --fg: #f0f3fa;
+      --panel: #202735;
+      --line: #303949;
+      --wave: #a1a2ff;
+      --grid: #303949;
     }
 
     * {
@@ -45,13 +50,15 @@
     }
 
     body {
+      min-width: 320px;
+      min-height: 100vh;
       margin: 0;
-      background: var(--bg);
+      padding: 0;
+      max-width: none;
+      background: radial-gradient(ellipse at 50% -18%, rgb(91 92 226 / 13%), transparent 55%), var(--bg);
       color: var(--fg);
       font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      padding: 16px;
-      max-width: 1100px;
-      margin-inline: auto;
+      transition: background-color .25s ease, color .25s ease;
     }
 
     h1 {
@@ -446,12 +453,113 @@
       background: var(--grid);
       font-weight: 500;
     }
+
+    .tool-page {
+      padding-bottom: 48px;
+    }
+
+    .tool-hero {
+      padding: 35px 0 25px;
+    }
+
+    .tool-hero h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 6vw, 4.25rem);
+      font-weight: 780;
+      letter-spacing: -.065em;
+      line-height: 1.06;
+    }
+
+    .tool-hero .hero-copy {
+      max-width: 700px;
+    }
+
+    .tool-guide {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+      margin-bottom: 14px;
+    }
+
+    .tool-guide details {
+      min-width: 0;
+      margin: 0;
+      padding: 15px 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      animation: rise-in .45s both;
+    }
+
+    .tool-guide summary {
+      color: var(--fg);
+      font-weight: 700;
+      opacity: 1;
+    }
+
+    .tool-guide details[open] summary {
+      margin-bottom: 9px;
+    }
+
+    .panel-box,
+    #res-card {
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .tool-controls {
+      animation: rise-in .5s .08s both;
+    }
+
+    .site-footer {
+      padding: 0 0 26px;
+      color: color-mix(in srgb, var(--fg) 62%, transparent);
+      font-size: .82rem;
+      text-align: center;
+    }
+
+    :focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--wave) 55%, transparent);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 700px) {
+      .tool-hero {
+        padding: 27px 0 19px;
+      }
+
+      .tool-guide {
+        grid-template-columns: 1fr;
+      }
+
+      .tool-guide details {
+        padding: 13px 14px;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <h1>Video Frame Time Calculator</h1>
-
+  <header class="shell topbar">
+    <a class="brand" href="../../index.html" aria-label="Back to Web Tools">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z"/></svg>
+      </span>
+      Web Tools
+    </a>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <span id="theme-label">Dark mode</span>
+    </button>
+  </header>
+  <main class="shell tool-page">
+    <section class="hero tool-hero" aria-labelledby="page-title">
+      <p class="eyebrow">Video analysis</p>
+      <h1 id="page-title">Video Frame Time Calculator</h1>
+      <p class="hero-copy">Use slow-motion or high-speed footage to compare the frame where an input happens with the frame where the display responds, and estimate the delay in milliseconds.</p>
+    </section>
+    <section class="tool-guide" aria-label="Tool instructions">
   <details open>
     <summary><b>What this tool does</b></summary>
     <p>This tool estimates the time between a visible mouse movement and the resulting visible change on a screen, using a
@@ -482,8 +590,10 @@
       Mouse wheel or 2-finger pinch zooms into video; drag with 1 finger/mouse to pan; double-tap to reset.
     </div>
   </details>
+    </section>
 
   <!-- Video File Selection -->
+    <section class="tool-controls" aria-label="Video latency calculator">
   <div class="panel-box">
     <input type="file" id="video-file-input" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.wmv,.flv,.ts,.mts,.3gp" style="display: none;">
     <div class="dropzone" id="dropzone">
@@ -680,6 +790,9 @@
       </table>
     </div>
   </div>
+    </section>
+  </main>
+  <footer class="shell site-footer">Free, focused tools that run right in your browser.</footer>
 
   <script>
     const $ = id => document.getElementById(id);
@@ -1944,6 +2057,10 @@
     ro.observe($('timeline-wrap'));
 
     matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => {
+      renderVideo();
+      drawTimeline();
+    });
+    window.addEventListener('webtools-theme-change', () => {
       renderVideo();
       drawTimeline();
     });
